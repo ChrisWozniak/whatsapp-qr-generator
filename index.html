@@ -1,11 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WhatsApp Contact QR Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;font-family:'Inter',sans-serif;}
+.app{background:#111b21;border-radius:16px;overflow:hidden;width:100%;max-width:380px;}
+.topbar{background:#1f2c34;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.avatar{width:38px;height:38px;border-radius:50%;background:#2a3942;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.avatar svg{width:22px;height:22px;}
+.name-block{display:flex;flex-direction:column;}
+.display-name{color:#e9edef;font-size:15px;font-weight:500;}
+.sub{color:#8696a0;font-size:12px;}
+.qr-icon-btn{width:36px;height:36px;border-radius:50%;background:#2a3942;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.qr-icon-btn:hover{background:#374248;}
+.qr-icon-btn svg{width:20px;height:20px;fill:none;stroke:#aebac1;stroke-width:1.8;}
+.form-area{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.field-group{background:#1f2c34;border-radius:10px;overflow:hidden;}
+.field{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:.5px solid #2a3942;}
+.field:last-child{border-bottom:none;}
+.field-icon{color:#8696a0;font-size:17px;flex-shrink:0;width:20px;text-align:center;}
+.field input{flex:1;background:transparent;border:none;outline:none;color:#e9edef;font-size:14px;font-family:'Inter',sans-serif;}
+.field input::placeholder{color:#8696a0;}
+.gen-btn{background:#00a884;color:#111b21;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .1s;margin:4px 0 8px;}
+.gen-btn:hover{background:#06cf9c;}
+.gen-btn:active{transform:scale(.98);}
+.output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;}
+.output-card{background:#1f2c34;border-radius:16px;width:100%;padding:20px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.out-avatar{width:60px;height:60px;border-radius:50%;background:#2a3942;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.out-avatar svg{width:34px;height:34px;}
+.out-name{color:#e9edef;font-size:18px;font-weight:500;text-align:center;}
+.out-sub{color:#8696a0;font-size:13px;margin-bottom:12px;}
+.qr-box{background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:center;width:200px;height:200px;}
+.privacy{color:#8696a0;font-size:12px;text-align:center;line-height:1.5;margin-top:14px;padding:0 4px;}
+.dl-btn{margin-top:14px;background:#00a884;color:#111b21;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s;}
+.dl-btn:hover{background:#06cf9c;}
+.back-btn{margin-top:8px;background:transparent;color:#8696a0;border:none;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;padding:8px;width:100%;text-align:center;}
+.back-btn:hover{color:#aebac1;}
+</style>
 </head>
 <body>
-    
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" fill="#8696a0"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#8696a0" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="name-block">
+        <span class="display-name" id="topbar-name">Chris</span>
+        <span class="sub">WhatsApp contact</span>
+      </div>
+    </div>
+    <button class="qr-icon-btn" id="qr-icon-btn" aria-label="View QR code">
+      <svg viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/>
+        <rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/>
+        <rect x="5" y="5" width="3" height="3" rx=".5" fill="#aebac1" stroke="none"/>
+        <rect x="16" y="5" width="3" height="3" rx=".5" fill="#aebac1" stroke="none"/>
+        <rect x="5" y="16" width="3" height="3" rx=".5" fill="#aebac1" stroke="none"/>
+        <path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="form-area" id="form-area">
+    <div class="field-group">
+      <div class="field">
+        <span class="field-icon">&#128100;</span>
+        <input type="text" id="f-name" placeholder="Full name" value="Chris"/>
+      </div>
+      <div class="field">
+        <span class="field-icon">&#128222;</span>
+        <input type="text" id="f-phone" placeholder="Phone number" value="+1 (555) 000-0000"/>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <span class="field-icon">&#128205;</span>
+        <input type="text" id="f-address" placeholder="Address (optional)"/>
+      </div>
+      <div class="field">
+        <span class="field-icon">&#127760;</span>
+        <input type="text" id="f-url" placeholder="Website URL (optional)"/>
+      </div>
+    </div>
+    <button class="gen-btn" id="gen-btn">&#9726; Generate QR code</button>
+  </div>
+
+  <div class="output" id="output-area">
+    <div class="output-card">
+      <div class="out-avatar">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" fill="#8696a0"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#8696a0" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="out-name" id="out-name">Chris</div>
+      <div class="out-sub">WhatsApp contact</div>
+      <div class="qr-box">
+        <canvas id="qr-canvas" width="170" height="170"></canvas>
+      </div>
+      <div class="privacy">Your QR code is private. Share it so others can scan it with their WhatsApp camera to add you as a contact.</div>
+    </div>
+    <button class="dl-btn" id="dl-btn">&#8595; Save QR code</button>
+    <button class="back-btn" id="back-btn">Edit details</button>
+  </div>
+
+</div>
+<script>
+  const nameEl=document.getElementById('f-name');
+  const phoneEl=document.getElementById('f-phone');
+  const addrEl=document.getElementById('f-address');
+  const urlEl=document.getElementById('f-url');
+  const genBtn=document.getElementById('gen-btn');
+  const qrIconBtn=document.getElementById('qr-icon-btn');
+  const formArea=document.getElementById('form-area');
+  const outputArea=document.getElementById('output-area');
+  const outName=document.getElementById('out-name');
+  const topbarName=document.getElementById('topbar-name');
+  const canvas=document.getElementById('qr-canvas');
+  const dlBtn=document.getElementById('dl-btn');
+  const backBtn=document.getElementById('back-btn');
+
+  nameEl.addEventListener('input',()=>{
+    topbarName.textContent=nameEl.value.trim()||'Contact';
+  });
+
+  function buildVCard(){
+    const name=nameEl.value.trim()||'Contact';
+    const phone=phoneEl.value.trim();
+    const address=addrEl.value.trim();
+    const url=urlEl.value.trim();
+    let vc='BEGIN:VCARD\nVERSION:3.0\nFN:'+name+'\nN:'+name+';;;;\n';
+    if(phone) vc+='TEL:'+phone+'\n';
+    if(address) vc+='ADR:;;'+address+';;;;\n';
+    if(url) vc+='URL:'+url+'\n';
+    vc+='END:VCARD';
+    return vc;
+  }
+
+  function showQR(){
+    const name=nameEl.value.trim()||'Contact';
+    outName.textContent=name;
+    topbarName.textContent=name;
+
+    const tmp=document.createElement('div');
+    tmp.style.cssText='position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(tmp);
+
+    try{
+      new QRCode(tmp,{
+        text:buildVCard(),
+        width:170,height:170,
+        colorDark:'#111b21',colorLight:'#ffffff',
+        correctLevel:QRCode.CorrectLevel.M
+      });
+      setTimeout(()=>{
+        const img=tmp.querySelector('img');
+        if(img&&img.src){
+          const image=new Image();
+          image.onload=()=>{
+            const ctx=canvas.getContext('2d');
+            canvas.width=170;canvas.height=170;
+            ctx.fillStyle='#ffffff';
+            ctx.fillRect(0,0,170,170);
+            ctx.drawImage(image,0,0,170,170);
+          };
+          image.src=img.src;
+        }
+        if(tmp.parentNode) document.body.removeChild(tmp);
+      },120);
+    }catch(e){
+      if(tmp.parentNode) document.body.removeChild(tmp);
+    }
+
+    formArea.style.display='none';
+    outputArea.style.display='flex';
+  }
+
+  genBtn.onclick=showQR;
+  qrIconBtn.onclick=showQR;
+  backBtn.onclick=()=>{outputArea.style.display='none';formArea.style.display='flex';};
+  dlBtn.onclick=()=>{
+    const a=document.createElement('a');
+    a.download=(nameEl.value.trim()||'contact')+'-whatsapp-qr.png';
+    a.href=canvas.toDataURL('image/png');
+    a.click();
+  };
+</script>
 </body>
 </html>
