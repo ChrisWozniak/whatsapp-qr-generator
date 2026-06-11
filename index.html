@@ -8,9 +8,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;font-family:'Inter',sans-serif;}
-.app{background:#111b21;border-radius:16px;overflow:hidden;width:100%;max-width:380px;}
-.topbar{background:#1f2c34;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+body{background:#111b21;height:100vh;height:100svh;display:flex;align-items:stretch;justify-content:center;padding:0;font-family:'Inter',sans-serif;}
+.app{background:#111b21;width:100%;display:flex;flex-direction:column;}
+.topbar{background:#1f2c34;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .topbar-left{display:flex;align-items:center;gap:10px;}
 .avatar{width:38px;height:38px;border-radius:50%;background:#2a3942;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .avatar svg{width:22px;height:22px;}
@@ -20,28 +20,53 @@ body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;jus
 .qr-icon-btn{width:36px;height:36px;border-radius:50%;background:#2a3942;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .qr-icon-btn:hover{background:#374248;}
 .qr-icon-btn svg{width:20px;height:20px;fill:none;stroke:#aebac1;stroke-width:1.8;}
-.form-area{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.form-area{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1;justify-content:center;}
 .field-group{background:#1f2c34;border-radius:10px;overflow:hidden;}
 .field{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:.5px solid #2a3942;}
 .field:last-child{border-bottom:none;}
 .field-icon{color:#8696a0;font-size:17px;flex-shrink:0;width:20px;text-align:center;}
 .field input{flex:1;background:transparent;border:none;outline:none;color:#e9edef;font-size:14px;font-family:'Inter',sans-serif;}
 .field input::placeholder{color:#8696a0;}
-.gen-btn{background:#00a884;color:#111b21;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .1s;margin:4px 0 8px;}
-.gen-btn:hover{background:#06cf9c;}
+.gen-btn{background:#25D366;color:#111b21;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s,transform .1s;margin:4px 0 0;}
+.gen-btn:hover{background:#1ebe57;}
 .gen-btn:active{transform:scale(.98);}
-.output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;}
-.output-card{background:#1f2c34;border-radius:16px;width:100%;padding:20px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.out-avatar{width:60px;height:60px;border-radius:50%;background:#2a3942;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.gen-btn:disabled{background:#2a3942;color:#8696a0;cursor:not-allowed;transform:none;}
+#counter-badge{color:#8696a0;font-size:12px;text-align:center;margin-top:6px;line-height:1.4;}
+#counter-badge.warn{color:#e9b84b;}
+.output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
+.output-card{background:#1f2c34;border-radius:16px;width:100%;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.out-avatar{width:60px;height:60px;border-radius:50%;background:#c23b5a;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
 .out-avatar svg{width:34px;height:34px;}
 .out-name{color:#e9edef;font-size:18px;font-weight:500;text-align:center;}
-.out-sub{color:#8696a0;font-size:13px;margin-bottom:12px;}
-.qr-box{background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:center;width:200px;height:200px;}
-.privacy{color:#8696a0;font-size:12px;text-align:center;line-height:1.5;margin-top:14px;padding:0 4px;}
-.dl-btn{margin-top:14px;background:#00a884;color:#111b21;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s;}
-.dl-btn:hover{background:#06cf9c;}
+.out-sub{color:#8696a0;font-size:13px;margin-bottom:8px;}
+.qr-box{background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:center;width:min(200px,55vw);height:min(200px,55vw);}
+#qr-canvas{width:calc(min(200px,55vw) - 28px);height:calc(min(200px,55vw) - 28px);display:block;}
+.privacy{color:#8696a0;font-size:12px;text-align:center;line-height:1.5;margin-top:10px;padding:0 4px;}
+.dl-btn{margin-top:10px;background:#25D366;color:#111b21;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s;}
+.dl-btn:hover{background:#1ebe57;}
 .back-btn{margin-top:8px;background:transparent;color:#8696a0;border:none;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;padding:8px;width:100%;text-align:center;}
 .back-btn:hover{color:#aebac1;}
+#upgrade-area{display:none;padding:0 16px 24px;flex-direction:column;align-items:center;flex:1;justify-content:center;}
+.upgrade-card{background:#1f2c34;border-radius:16px;width:100%;padding:28px 20px 24px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;}
+.upgrade-card h2{color:#e9edef;font-size:17px;font-weight:500;}
+.upgrade-card p{color:#8696a0;font-size:13px;line-height:1.5;}
+.feature-list{list-style:none;width:100%;display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.feature-list li{color:#e9edef;font-size:13px;display:flex;align-items:center;gap:8px;background:#2a3942;border-radius:8px;padding:9px 12px;}
+.feature-list li::before{content:"✓";color:#25D366;font-weight:700;flex-shrink:0;}
+.upgrade-btn{background:#25D366;color:#111b21;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;width:100%;margin-top:4px;transition:background .15s;}
+.upgrade-btn:hover{background:#1ebe57;}
+.back-to-form-btn{margin-top:10px;background:transparent;color:#8696a0;border:none;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;padding:8px;width:100%;text-align:center;}
+.back-to-form-btn:hover{color:#aebac1;}
+@media(min-width:520px){
+body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padding:2rem 1rem;}
+.app{border-radius:16px;overflow:hidden;min-height:580px;max-width:380px;}
+.output-card{padding:20px 20px 24px;}
+.out-sub{margin-bottom:12px;}
+.privacy{margin-top:14px;}
+.dl-btn{margin-top:14px;}
+.qr-box{width:200px;height:200px;}
+#qr-canvas{width:172px;height:172px;}
+}
 </style>
 </head>
 <body>
@@ -56,7 +81,7 @@ body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;jus
         </svg>
       </div>
       <div class="name-block">
-        <span class="display-name" id="topbar-name">Chris</span>
+        <span class="display-name" id="topbar-name">Your name</span>
         <span class="sub">WhatsApp contact</span>
       </div>
     </div>
@@ -77,38 +102,29 @@ body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;jus
     <div class="field-group">
       <div class="field">
         <span class="field-icon">&#128100;</span>
-        <input type="text" id="f-name" placeholder="Full name" value="Chris"/>
+        <input type="text" id="f-name" placeholder="Enter your name"/>
       </div>
       <div class="field">
         <span class="field-icon">&#128222;</span>
-        <input type="text" id="f-phone" placeholder="Phone number" value="+1 (555) 000-0000"/>
-      </div>
-    </div>
-    <div class="field-group">
-      <div class="field">
-        <span class="field-icon">&#128205;</span>
-        <input type="text" id="f-address" placeholder="Address (optional)"/>
-      </div>
-      <div class="field">
-        <span class="field-icon">&#127760;</span>
-        <input type="text" id="f-url" placeholder="Website URL (optional)"/>
+        <input type="text" id="f-phone" placeholder="Enter your phone number"/>
       </div>
     </div>
     <button class="gen-btn" id="gen-btn">&#9726; Generate QR code</button>
+    <p id="counter-badge"></p>
   </div>
 
   <div class="output" id="output-area">
     <div class="output-card">
       <div class="out-avatar">
         <svg viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="8" r="4" fill="#8696a0"/>
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#8696a0" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          <circle cx="12" cy="8" r="4" fill="#ffffff"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" fill="none"/>
         </svg>
       </div>
       <div class="out-name" id="out-name">Chris</div>
       <div class="out-sub">WhatsApp contact</div>
       <div class="qr-box">
-        <canvas id="qr-canvas" width="170" height="170"></canvas>
+        <canvas id="qr-canvas" width="400" height="400"></canvas>
       </div>
       <div class="privacy">Your QR code is private. Share it so others can scan it with their WhatsApp camera to add you as a contact.</div>
     </div>
@@ -116,87 +132,363 @@ body{background:#0b141a;min-height:100vh;display:flex;align-items:flex-start;jus
     <button class="back-btn" id="back-btn">Edit details</button>
   </div>
 
+  <div id="upgrade-area">
+    <div class="upgrade-card">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="11" width="14" height="10" rx="2" fill="#2a3942"/>
+        <path d="M8 11V7a4 4 0 1 1 8 0v4" stroke="#8696a0" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="12" cy="16" r="1.5" fill="#8696a0"/>
+      </svg>
+      <h2>You've used all 3 free codes</h2>
+      <p>Upgrade to Premium to generate unlimited WhatsApp QR codes with custom branding.</p>
+      <ul class="feature-list">
+        <li>Unlimited QR code generations</li>
+        <li>WhatsApp logo overlay on every code</li>
+        <li>Custom brand colors &amp; logo</li>
+      </ul>
+      <button class="upgrade-btn" id="upgrade-btn">Upgrade to Premium</button>
+    </div>
+    <button class="back-to-form-btn" id="back-to-form-btn">Back to generator</button>
+  </div>
+
 </div>
 <script>
-  const nameEl=document.getElementById('f-name');
-  const phoneEl=document.getElementById('f-phone');
-  const addrEl=document.getElementById('f-address');
-  const urlEl=document.getElementById('f-url');
-  const genBtn=document.getElementById('gen-btn');
-  const qrIconBtn=document.getElementById('qr-icon-btn');
-  const formArea=document.getElementById('form-area');
-  const outputArea=document.getElementById('output-area');
-  const outName=document.getElementById('out-name');
-  const topbarName=document.getElementById('topbar-name');
-  const canvas=document.getElementById('qr-canvas');
-  const dlBtn=document.getElementById('dl-btn');
-  const backBtn=document.getElementById('back-btn');
+  const nameEl        = document.getElementById('f-name');
+  const phoneEl       = document.getElementById('f-phone');
+  const genBtn        = document.getElementById('gen-btn');
+  const qrIconBtn     = document.getElementById('qr-icon-btn');
+  const formArea      = document.getElementById('form-area');
+  const outputArea    = document.getElementById('output-area');
+  const upgradeArea   = document.getElementById('upgrade-area');
+  const outName       = document.getElementById('out-name');
+  const topbarName    = document.getElementById('topbar-name');
+  const canvas        = document.getElementById('qr-canvas');
+  const dlBtn         = document.getElementById('dl-btn');
+  const backBtn       = document.getElementById('back-btn');
+  const backToFormBtn = document.getElementById('back-to-form-btn');
+  const upgradeBtn    = document.getElementById('upgrade-btn');
+  const counterBadge  = document.getElementById('counter-badge');
 
-  nameEl.addEventListener('input',()=>{
-    topbarName.textContent=nameEl.value.trim()||'Contact';
-  });
+  const STORAGE_KEY = 'waqr_uses';
+  const MAX_FREE    = 3;
 
-  function buildVCard(){
-    const name=nameEl.value.trim()||'Contact';
-    const phone=phoneEl.value.trim();
-    const address=addrEl.value.trim();
-    const url=urlEl.value.trim();
-    let vc='BEGIN:VCARD\nVERSION:3.0\nFN:'+name+'\nN:'+name+';;;;\n';
-    if(phone) vc+='TEL:'+phone+'\n';
-    if(address) vc+='ADR:;;'+address+';;;;\n';
-    if(url) vc+='URL:'+url+'\n';
-    vc+='END:VCARD';
-    return vc;
+  function getUses() {
+    try { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); } catch(e) { return 0; }
+  }
+  function incrementUses() {
+    try { localStorage.setItem(STORAGE_KEY, getUses() + 1); } catch(e) {}
+  }
+  function isAtLimit() { return getUses() >= MAX_FREE; }
+
+  function updateGenBtn() {
+    const filled = nameEl.value.trim().length > 0 && phoneEl.value.trim().length > 0;
+    genBtn.disabled = !filled || isAtLimit();
   }
 
-  function showQR(){
-    const name=nameEl.value.trim()||'Contact';
-    outName.textContent=name;
-    topbarName.textContent=name;
+  function renderCounter() {
+    const uses = getUses();
+    const rem  = MAX_FREE - uses;
+    if (rem <= 0) {
+      counterBadge.textContent = "You've used all 3 free codes";
+      counterBadge.classList.add('warn');
+    } else {
+      counterBadge.textContent = uses + ' of ' + MAX_FREE + ' free codes used';
+      counterBadge.classList.toggle('warn', rem === 1);
+    }
+    updateGenBtn();
+  }
 
-    const tmp=document.createElement('div');
-    tmp.style.cssText='position:absolute;left:-9999px;top:-9999px;';
+  function showForm() {
+    formArea.style.display    = 'flex';
+    outputArea.style.display  = 'none';
+    upgradeArea.style.display = 'none';
+  }
+  function showOutput() {
+    formArea.style.display    = 'none';
+    outputArea.style.display  = 'flex';
+    upgradeArea.style.display = 'none';
+  }
+  function showUpgrade() {
+    formArea.style.display    = 'none';
+    outputArea.style.display  = 'none';
+    upgradeArea.style.display = 'flex';
+  }
+
+  function buildWaMe(raw) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('https://wa.me/')) return trimmed;
+    const digits = trimmed.replace(/\D/g, '');
+    if (!digits) return 'https://wa.me/';
+    const normalized = digits.length <= 10 ? '1' + digits : digits;
+    return 'https://wa.me/' + normalized;
+  }
+
+  function drawLogoOverlay(ctx, size) {
+    const cx = size / 2, cy = size / 2, r = size * 0.09;
+    ctx.beginPath(); ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#25D366'; ctx.fill();
+    const PHONE = 'M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z';
+    const scale = (r * 1.4) / 24;
+    ctx.save();
+    ctx.translate(cx - 12 * scale, cy - 12 * scale);
+    ctx.scale(scale, scale);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill(new Path2D(PHONE));
+    ctx.restore();
+  }
+
+  function generateQR(text, targetCanvas) {
+    const SIZE = 400;
+    targetCanvas.width  = SIZE;
+    targetCanvas.height = SIZE;
+    const ctx = targetCanvas.getContext('2d');
+
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;visibility:hidden;';
     document.body.appendChild(tmp);
 
-    try{
-      new QRCode(tmp,{
-        text:buildVCard(),
-        width:170,height:170,
-        colorDark:'#111b21',colorLight:'#ffffff',
-        correctLevel:QRCode.CorrectLevel.M
-      });
-      setTimeout(()=>{
-        const img=tmp.querySelector('img');
-        if(img&&img.src){
-          const image=new Image();
-          image.onload=()=>{
-            const ctx=canvas.getContext('2d');
-            canvas.width=170;canvas.height=170;
-            ctx.fillStyle='#ffffff';
-            ctx.fillRect(0,0,170,170);
-            ctx.drawImage(image,0,0,170,170);
-          };
-          image.src=img.src;
-        }
-        if(tmp.parentNode) document.body.removeChild(tmp);
-      },120);
-    }catch(e){
-      if(tmp.parentNode) document.body.removeChild(tmp);
-    }
+    new QRCode(tmp, {
+      text: text,
+      width: SIZE,
+      height: SIZE,
+      colorDark: '#111b21',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
 
-    formArea.style.display='none';
-    outputArea.style.display='flex';
+    const innerCanvas = tmp.querySelector('canvas');
+    if (innerCanvas) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, SIZE, SIZE);
+      ctx.drawImage(innerCanvas, 0, 0, SIZE, SIZE);
+      document.body.removeChild(tmp);
+      drawLogoOverlay(ctx, SIZE);
+    } else {
+      setTimeout(() => {
+        const img = tmp.querySelector('img');
+        if (img && img.src) {
+          const image = new Image();
+          image.onload = () => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, SIZE, SIZE);
+            ctx.drawImage(image, 0, 0, SIZE, SIZE);
+            drawLogoOverlay(ctx, SIZE);
+          };
+          image.src = img.src;
+        }
+        if (tmp.parentNode) document.body.removeChild(tmp);
+      }, 150);
+    }
   }
 
-  genBtn.onclick=showQR;
-  qrIconBtn.onclick=showQR;
-  backBtn.onclick=()=>{outputArea.style.display='none';formArea.style.display='flex';};
-  dlBtn.onclick=()=>{
-    const a=document.createElement('a');
-    a.download=(nameEl.value.trim()||'contact')+'-whatsapp-qr.png';
-    a.href=canvas.toDataURL('image/png');
+  // Rounded rectangle path helper
+  function rrect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  // Person silhouette icon centered in a circle of radius r at (cx, cy)
+  function drawPersonIcon(ctx, cx, cy, r, color) {
+    ctx.fillStyle = color;
+    // Head
+    ctx.beginPath();
+    ctx.arc(cx, cy - r * 0.16, r * 0.32, 0, Math.PI * 2);
+    ctx.fill();
+    // Body (lower half clip)
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cx - r, cy, r * 2, r);
+    ctx.clip();
+    ctx.beginPath();
+    ctx.arc(cx, cy + r * 0.12, r * 0.52, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Builds a branded download canvas: light card with name + framed QR
+  function buildDownloadCanvas() {
+    const CANVAS_W  = 480;
+    const MARGIN    = 24;
+    const CARD_PAD  = 36;
+    const CARD_W    = CANVAS_W - MARGIN * 2;
+    const cx        = CANVAS_W / 2;
+
+    const AVATAR_D  = 56;
+    const QR_SIZE   = 200;  // QR image draw size
+    const FRAME_PAD = 14;
+    const FRAME_SIZE = QR_SIZE + FRAME_PAD * 2;
+
+    // Calculate card inner content height
+    const innerH = AVATAR_D            // avatar circle
+                 + 16                  // gap
+                 + 30                  // name text
+                 + 8                   // gap
+                 + 20                  // subtitle text
+                 + 24                  // gap
+                 + FRAME_SIZE          // QR frame
+                 + 18                  // gap
+                 + 18;                 // footer text
+
+    const cardH    = CARD_PAD + innerH + CARD_PAD;
+    const CANVAS_H = MARGIN + cardH + MARGIN + 16;
+
+    const dc = document.createElement('canvas');
+    dc.width  = CANVAS_W;
+    dc.height = CANVAS_H;
+    const ctx = dc.getContext('2d');
+
+    // Page background
+    ctx.fillStyle = '#f0f2f5';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Card shadow
+    ctx.save();
+    ctx.shadowColor   = 'rgba(0,0,0,0.14)';
+    ctx.shadowBlur    = 28;
+    ctx.shadowOffsetY = 6;
+    rrect(ctx, MARGIN, MARGIN, CARD_W, cardH, 32);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Card fill (clean, no shadow)
+    ctx.save();
+    rrect(ctx, MARGIN, MARGIN, CARD_W, cardH, 32);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Subtle card border
+    ctx.save();
+    rrect(ctx, MARGIN, MARGIN, CARD_W, cardH, 32);
+    ctx.strokeStyle = '#c8cfd4';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    let y = MARGIN + CARD_PAD;
+
+    // Green avatar circle
+    ctx.beginPath();
+    ctx.arc(cx, y + AVATAR_D / 2, AVATAR_D / 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#25D366';
+    ctx.fill();
+    drawPersonIcon(ctx, cx, y + AVATAR_D / 2, AVATAR_D / 2, '#ffffff');
+    y += AVATAR_D + 16;
+
+    // Contact name
+    const name = nameEl.value.trim() || 'Contact';
+    ctx.fillStyle    = '#1f2c34';
+    ctx.font         = '500 22px Inter, sans-serif';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(name, cx, y);
+    y += 30 + 8;
+
+    // Subtitle
+    ctx.fillStyle = '#8696a0';
+    ctx.font      = '400 13px Inter, sans-serif';
+    ctx.fillText('WhatsApp Contact', cx, y);
+    y += 20 + 24;
+
+    // QR frame — subtle shadow + border
+    const frameX = cx - FRAME_SIZE / 2;
+    ctx.save();
+    ctx.shadowColor   = 'rgba(0,0,0,0.07)';
+    ctx.shadowBlur    = 10;
+    ctx.shadowOffsetY = 2;
+    rrect(ctx, frameX, y, FRAME_SIZE, FRAME_SIZE, 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Clip QR image to the rounded frame so its square corners don't bleed out
+    ctx.save();
+    rrect(ctx, frameX, y, FRAME_SIZE, FRAME_SIZE, 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(canvas, frameX + FRAME_PAD, y + FRAME_PAD, QR_SIZE, QR_SIZE);
+    ctx.restore();
+
+    // Border drawn on top of clipped content
+    ctx.save();
+    rrect(ctx, frameX, y, FRAME_SIZE, FRAME_SIZE, 14);
+    ctx.strokeStyle = '#dde1e4';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    y += FRAME_SIZE + 18;
+
+    // Footer
+    ctx.fillStyle = '#8696a0';
+    ctx.font      = '400 12px Inter, sans-serif';
+    ctx.fillText('Scan to start a WhatsApp chat', cx, y);
+
+    return dc;
+  }
+
+  function handleGenerate() {
+    if (isAtLimit()) { showUpgrade(); return; }
+    const name  = nameEl.value.trim() || 'Contact';
+    const phone = phoneEl.value.trim();
+    const waUrl = buildWaMe(phone);
+    outName.textContent    = name;
+    topbarName.textContent = name;
+    incrementUses();
+    renderCounter();
+    generateQR(waUrl, canvas);
+    showOutput();
+  }
+
+  nameEl.addEventListener('input', () => {
+    topbarName.textContent = nameEl.value.trim() || 'Contact';
+    updateGenBtn();
+  });
+  phoneEl.addEventListener('input', updateGenBtn);
+
+  genBtn.onclick        = handleGenerate;
+  qrIconBtn.onclick     = handleGenerate;
+  backBtn.onclick       = () => isAtLimit() ? showUpgrade() : showForm();
+  backToFormBtn.onclick = showForm;
+  upgradeBtn.onclick    = () => alert('Premium upgrade coming soon!\n\nUnlimited codes, custom branding, and logo overlays.');
+
+  dlBtn.onclick = () => {
+    const dc = buildDownloadCanvas();
+    const a  = document.createElement('a');
+    a.download = (nameEl.value.trim() || 'contact') + '-whatsapp-qr.png';
+    a.href     = dc.toDataURL('image/png');
     a.click();
   };
+
+  // Ctrl+\ resets the freemium counter (presentation use)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === '\\' && e.ctrlKey && !e.shiftKey && !e.altKey) {
+      try { localStorage.removeItem(STORAGE_KEY); } catch(err) {}
+      renderCounter();
+      showForm();
+    }
+  });
+
+  // Init
+  renderCounter();
+  if (isAtLimit()) {
+    showUpgrade();
+  } else {
+    showForm();
+  }
 </script>
 </body>
 </html>
