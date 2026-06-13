@@ -34,7 +34,7 @@ Everything in the current codebase represents Stage 1:
 - **Freemium counter** — tracks up to 3 free generations via `localStorage`; disables the button and shows an upgrade screen at the limit
 - **Upgrade screen** — lists Premium features and shows a placeholder CTA (active in Stage 2)
 - **Responsive layout** — mobile-first, adapts to desktop at 520 px breakpoint
-- **Presentation reset** — `Ctrl+\` resets the freemium counter without touching any other state
+- **Presentation reset** — `Ctrl+\` on desktop or **5 taps on the "WhatsApp contact" subtitle** on mobile resets the freemium counter; both show a brief "Counter reset!" confirmation in the topbar
 
 ---
 
