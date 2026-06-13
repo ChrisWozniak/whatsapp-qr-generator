@@ -33,6 +33,7 @@ body{background:#111b21;height:100vh;height:100svh;display:flex;align-items:stre
 .gen-btn:disabled{background:#2a3942;color:#8696a0;cursor:not-allowed;transform:none;}
 #counter-badge{color:#8696a0;font-size:12px;text-align:center;margin-top:6px;line-height:1.4;}
 #counter-badge.warn{color:#e9b84b;}
+#field-error{color:#f15c6d;font-size:12px;text-align:center;min-height:16px;line-height:1.4;}
 .output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
 .output-card{background:#1f2c34;border-radius:16px;width:100%;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
 .out-avatar{width:60px;height:60px;border-radius:50%;background:#c23b5a;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
@@ -102,13 +103,14 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
     <div class="field-group">
       <div class="field">
         <span class="field-icon">&#128100;</span>
-        <input type="text" id="f-name" placeholder="Enter your name"/>
+        <input type="text" id="f-name" placeholder="Enter your name" maxlength="100"/>
       </div>
       <div class="field">
         <span class="field-icon">&#128222;</span>
-        <input type="text" id="f-phone" placeholder="Enter your phone number"/>
+        <input type="text" id="f-phone" placeholder="Enter your phone number" maxlength="20"/>
       </div>
     </div>
+    <p id="field-error"></p>
     <button class="gen-btn" id="gen-btn">&#9726; Generate QR code</button>
     <p id="counter-badge"></p>
   </div>
@@ -168,6 +170,7 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
   const backToFormBtn = document.getElementById('back-to-form-btn');
   const upgradeBtn    = document.getElementById('upgrade-btn');
   const counterBadge  = document.getElementById('counter-badge');
+  const fieldError    = document.getElementById('field-error');
 
   const STORAGE_KEY = 'waqr_uses';
   const MAX_FREE    = 3;
@@ -183,6 +186,7 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
   function updateGenBtn() {
     const filled = nameEl.value.trim().length > 0 && phoneEl.value.trim().length > 0;
     genBtn.disabled = !filled || isAtLimit();
+    if (filled) clearFieldError();
   }
 
   function renderCounter() {
@@ -214,10 +218,22 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
     upgradeArea.style.display = 'flex';
   }
 
+  function sanitizeName(raw) {
+    return raw.trim().replace(/[\x00-\x1F\x7F]/g, '').slice(0, 100);
+  }
+
+  function validatePhone(raw) {
+    const digits = raw.trim().replace(/\D/g, '');
+    if (digits.length < 7)  return { valid: false, msg: 'Enter a valid phone number (min 7 digits).' };
+    if (digits.length > 15) return { valid: false, msg: 'Phone number is too long (max 15 digits).' };
+    return { valid: true };
+  }
+
+  function showFieldError(msg) { fieldError.textContent = msg; }
+  function clearFieldError()   { fieldError.textContent = ''; }
+
   function buildWaMe(raw) {
-    const trimmed = raw.trim();
-    if (trimmed.startsWith('https://wa.me/')) return trimmed;
-    const digits = trimmed.replace(/\D/g, '');
+    const digits = raw.trim().replace(/\D/g, '');
     if (!digits) return 'https://wa.me/';
     const normalized = digits.length <= 10 ? '1' + digits : digits;
     return 'https://wa.me/' + normalized;
@@ -442,9 +458,12 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
 
   function handleGenerate() {
     if (isAtLimit()) { showUpgrade(); return; }
-    const name  = nameEl.value.trim() || 'Contact';
-    const phone = phoneEl.value.trim();
-    const waUrl = buildWaMe(phone);
+    const name = sanitizeName(nameEl.value);
+    if (!name) { showFieldError('Please enter your name.'); return; }
+    const phoneResult = validatePhone(phoneEl.value);
+    if (!phoneResult.valid) { showFieldError(phoneResult.msg); return; }
+    clearFieldError();
+    const waUrl = buildWaMe(phoneEl.value);
     outName.textContent    = name;
     topbarName.textContent = name;
     incrementUses();
@@ -454,10 +473,14 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
   }
 
   nameEl.addEventListener('input', () => {
-    topbarName.textContent = nameEl.value.trim() || 'Contact';
+    topbarName.textContent = sanitizeName(nameEl.value) || 'Contact';
+    clearFieldError();
     updateGenBtn();
   });
-  phoneEl.addEventListener('input', updateGenBtn);
+  phoneEl.addEventListener('input', () => {
+    clearFieldError();
+    updateGenBtn();
+  });
 
   genBtn.onclick        = handleGenerate;
   qrIconBtn.onclick     = handleGenerate;
@@ -468,7 +491,7 @@ body{background:#f0f2f5;height:auto;min-height:100vh;align-items:flex-start;padd
   dlBtn.onclick = () => {
     const dc = buildDownloadCanvas();
     const a  = document.createElement('a');
-    a.download = (nameEl.value.trim() || 'contact') + '-whatsapp-qr.png';
+    a.download = (sanitizeName(nameEl.value).replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'contact') + '-whatsapp-qr.png';
     a.href     = dc.toDataURL('image/png');
     a.click();
   };
