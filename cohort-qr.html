@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Cohort QR — WhatsApp QR Code Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#f0f2f5;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:'Inter',sans-serif;padding:2rem;}
+  .card{background:#ffffff;border-radius:24px;padding:36px 40px;display:flex;flex-direction:column;align-items:center;gap:16px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1.5px solid #e0e4e8;max-width:320px;width:100%;}
+  .names{color:#1f2c34;font-size:22px;font-weight:700;text-align:center;letter-spacing:-0.3px;}
+  .appname{color:#25D366;font-size:13px;font-weight:500;text-align:center;letter-spacing:0.4px;text-transform:uppercase;}
+  .qr-frame{background:#fff;border-radius:16px;padding:14px;border:1.5px solid #dde1e4;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+  .url{color:#8696a0;font-size:11px;text-align:center;word-break:break-all;}
+  .save-btn{background:#25D366;color:#111b21;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;}
+  .save-btn:hover{background:#1ebe57;}
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="names">Chris &amp; Nathan</div>
+  <div class="appname">WhatsApp QR Code Generator</div>
+  <div class="qr-frame" id="qr-frame">
+    <div id="qr-target"></div>
+  </div>
+  <div class="url">chriswozniak.github.io/whatsapp-qr-generator</div>
+</div>
+
+<button class="save-btn" onclick="saveCard()">Save as PNG</button>
+
+<script>
+  const URL = 'https://chriswozniak.github.io/whatsapp-qr-generator';
+  const SIZE = 200;
+
+  new QRCode(document.getElementById('qr-target'), {
+    text: URL,
+    width: SIZE,
+    height: SIZE,
+    colorDark: '#111b21',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  function rrect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  function saveCard() {
+    const qrImg = document.querySelector('#qr-target img') || document.querySelector('#qr-target canvas');
+    if (!qrImg) { alert('QR not ready yet, try again in a moment.'); return; }
+
+    const CW = 400, PAD = 40, QR = 220, FRAME_PAD = 16;
+    const FRAME = QR + FRAME_PAD * 2;
+    const CH = PAD + 48 + 12 + 22 + 24 + FRAME + 18 + 20 + PAD;
+
+    const dc = document.createElement('canvas');
+    dc.width = CW; dc.height = CH;
+    const ctx = dc.getContext('2d');
+    const cx = CW / 2;
+
+    // Background
+    ctx.fillStyle = '#f0f2f5';
+    ctx.fillRect(0, 0, CW, CH);
+
+    // Card shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.13)';
+    ctx.shadowBlur = 30;
+    ctx.shadowOffsetY = 6;
+    rrect(ctx, PAD, PAD, CW - PAD * 2, CH - PAD * 2, 28);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Card fill
+    ctx.save();
+    rrect(ctx, PAD, PAD, CW - PAD * 2, CH - PAD * 2, 28);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Card border
+    ctx.save();
+    rrect(ctx, PAD, PAD, CW - PAD * 2, CH - PAD * 2, 28);
+    ctx.strokeStyle = '#e0e4e8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    let y = PAD + 36;
+
+    // Names
+    ctx.fillStyle = '#1f2c34';
+    ctx.font = '700 28px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText('Chris & Nathan', cx, y);
+    y += 48 + 12;
+
+    // App name
+    ctx.fillStyle = '#25D366';
+    ctx.font = '500 13px Inter, sans-serif';
+    ctx.fillText('WHATSAPP QR CODE GENERATOR', cx, y);
+    y += 22 + 24;
+
+    // QR frame shadow
+    const fx = cx - FRAME / 2;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.08)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 2;
+    rrect(ctx, fx, y, FRAME, FRAME, 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // QR image clipped to frame
+    ctx.save();
+    rrect(ctx, fx, y, FRAME, FRAME, 14);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.clip();
+    ctx.drawImage(qrImg, fx + FRAME_PAD, y + FRAME_PAD, QR, QR);
+    ctx.restore();
+
+    // Frame border
+    ctx.save();
+    rrect(ctx, fx, y, FRAME, FRAME, 14);
+    ctx.strokeStyle = '#dde1e4';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    y += FRAME + 18;
+
+    // URL
+    ctx.fillStyle = '#8696a0';
+    ctx.font = '400 12px Inter, sans-serif';
+    ctx.fillText('chriswozniak.github.io/whatsapp-qr-generator', cx, y);
+
+    const a = document.createElement('a');
+    a.download = 'chris-nathan-whatsapp-qr-generator.png';
+    a.href = dc.toDataURL('image/png');
+    a.click();
+  }
+</script>
+</body>
+</html>
