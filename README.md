@@ -38,14 +38,24 @@ Everything in the current codebase represents Stage 1:
 
 ---
 
-## Stage 2 — Planned (Cycle 1, Week 2)
+## Stage 2 — In progress (Cycle 1, Week 2)
 
-The upgrade screen is already wired up; Stage 2 will activate it:
+Based on the *Week 2 Improvements* PRD (Goal-Gradient Progress Bar + Premium Feature Unlock).
+
+### Implemented
+
+- **Goal-Gradient progress bar** — the text-only freemium counter is replaced with a visual progress bar that applies the Goal-Gradient Effect (Laws of UX). The track is gray before any use, then turns WhatsApp green (`#25D366`) once generation starts. An amber (`#FFA500`) fill grows left-to-right across the green as the user approaches the gate — **1/3 amber after the 1st code, 2/3 after the 2nd, fully amber after the 3rd**. The amber width animates smoothly on each generation.
+- **Dynamic counter copy** — the label below the bar updates with the remaining count: "3 free codes remaining" → "2 free codes remaining" → "Last free code — make it count!" → "You've used all 3 free codes".
+- **Realistic iPhone device frame (desktop)** — on screens ≥ 520 px the app is rendered inside a true-to-life iPhone 17 frame: black anodized casing, Dynamic Island, iOS status bar (9:41, signal, Wi-Fi, battery), and physical side buttons (mute, volume, power). The frame uses authentic **iPhone 17 proportions (~19.5:9)** and scales fluidly to the viewport — capped at 902 px tall on large monitors and shrinking on smaller screens while preserving its shape — and stays centered. On mobile the frame is hidden and the app fills the screen as a normal full-screen web app.
+
+### Still planned
 
 - **Payment / Premium unlock** — real upgrade flow replacing the placeholder alert
 - **Unlimited generations** — no cap for Premium users
 - **Custom brand colors** — user-selectable QR foreground and background colors
 - **Custom logo upload** — replace the default WhatsApp overlay with the user's own logo
+- **SVG / PDF export** — additional download formats for print-quality output
+- **Live QR preview** — preview that updates as the user types
 - **Persistent Premium state** — remember paid status across sessions
 
 ---
@@ -59,7 +69,7 @@ The upgrade screen is already wired up; Stage 2 will activate it:
 | Logic | Vanilla JavaScript (ES6+) |
 | QR encoding | [QRCodeJS 1.0.0](https://github.com/davidshimjs/qrcodejs) via CDN |
 | QR rendering & export | Canvas API + Path2D |
-| Fonts | Google Fonts — Inter (400, 500) |
+| Fonts | Google Fonts — Inter (400, 500, 600) |
 | State persistence | `localStorage` (freemium counter) |
 | Hosting | Static file — no server required |
 
