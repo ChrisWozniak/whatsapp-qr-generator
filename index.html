@@ -690,9 +690,13 @@ body.premium #login-link{display:none;}
   function clearFieldError()   { fieldError.textContent = ''; }
 
   function buildWaMe(raw) {
-    const digits = raw.trim().replace(/\D/g, '');
+    const trimmed = raw.trim();
+    const digits  = trimmed.replace(/\D/g, '');
     if (!digits) return 'https://wa.me/';
-    const normalized = digits.length <= 10 ? '1' + digits : digits;
+    // Only assume US (+1) for bare 10-digit numbers with no explicit country code.
+    // A leading '+' or '00' means the user already supplied one.
+    const hasCountryCode = trimmed.startsWith('+') || digits.startsWith('00');
+    const normalized = (!hasCountryCode && digits.length === 10) ? '1' + digits : digits;
     return 'https://wa.me/' + normalized;
   }
 
