@@ -70,6 +70,18 @@ body{
 }
 #counter-badge{color:#8696a0;font-size:12px;text-align:center;line-height:1.4;}
 #counter-badge.warn{color:#e9b84b;}
+/* Path back to the Premium signup screen — only visible at the gate */
+.form-upgrade-btn{
+  display:none;
+  background:#25D366;color:#111b21;border:none;border-radius:10px;
+  padding:13px;font-size:15px;font-weight:500;font-family:'Inter',sans-serif;
+  cursor:pointer;width:100%;margin-top:8px;
+  align-items:center;justify-content:center;gap:8px;
+  transition:background .15s,transform .1s;
+}
+.form-upgrade-btn.show{display:flex;}
+.form-upgrade-btn:hover{background:#1ebe57;}
+.form-upgrade-btn:active{transform:scale(.98);}
 
 /* ─── Output ─────────────────────────────────────────────────── */
 .output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
@@ -214,9 +226,26 @@ body{
   .qr-box{width:200px;height:200px;}
   #qr-canvas{width:172px;height:172px;}
 }
+
+/* Shown only when JavaScript is disabled */
+.noscript-notice{
+  max-width:420px;margin:24px auto;padding:18px 20px;
+  background:#1f2c34;color:#e9edef;border:1px solid #2a3942;border-radius:12px;
+  font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;text-align:center;
+}
+.noscript-notice strong{color:#25D366;}
 </style>
 </head>
 <body>
+
+<noscript>
+  <div class="noscript-notice">
+    <strong>JavaScript is required.</strong><br/>
+    This WhatsApp QR Code Generator runs entirely in your browser and needs
+    JavaScript enabled to create QR codes. Please turn on JavaScript and reload
+    the page.
+  </div>
+</noscript>
 
 <div class="iphone-frame">
 
@@ -290,11 +319,11 @@ body{
         <div class="field-group">
           <div class="field">
             <span class="field-icon">&#128100;</span>
-            <input type="text" id="f-name" placeholder="Enter your name" maxlength="100"/>
+            <input type="text" id="f-name" placeholder="Enter your name (e.g. John Smith)" maxlength="100"/>
           </div>
           <div class="field">
             <span class="field-icon">&#128222;</span>
-            <input type="text" id="f-phone" placeholder="Enter your phone number" maxlength="20"/>
+            <input type="tel" id="f-phone" placeholder="Enter phone number (e.g. +1 415 555 1234)" maxlength="20"/>
           </div>
         </div>
         <p id="field-error"></p>
@@ -306,6 +335,9 @@ body{
           </div>
           <p id="counter-badge"></p>
         </div>
+        <!-- Shown only once the free limit is reached, so a user who came
+             back from the upgrade screen still has a path to Premium signup -->
+        <button class="form-upgrade-btn" id="form-upgrade-btn">&#9889; Upgrade to Premium</button>
       </div>
 
       <div class="output" id="output-area">
@@ -368,13 +400,19 @@ body{
   const counterBadge  = document.getElementById('counter-badge');
   const progressFill  = document.getElementById('progress-fill');
   const progressTrack = document.querySelector('.progress-track');
+  const formUpgradeBtn = document.getElementById('form-upgrade-btn');
   const fieldError    = document.getElementById('field-error');
 
   const STORAGE_KEY = 'waqr_uses';
   const MAX_FREE    = 3;
 
   function getUses() {
-    try { return parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10); } catch(e) { return 0; }
+    try {
+      const n = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+      // Reject tampered/corrupt values (NaN, negatives) so the gate can't
+      // be silently disabled by a non-numeric or negative localStorage value.
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    } catch(e) { return 0; }
   }
   function incrementUses() {
     try { localStorage.setItem(STORAGE_KEY, getUses() + 1); } catch(e) {}
@@ -407,6 +445,11 @@ body{
       counterBadge.textContent = rem + ' free codes remaining';
       counterBadge.className = '';
     }
+
+    // At the gate, surface a button to reach the Premium signup screen
+    // (the Generate button is disabled here, so this is the only path).
+    formUpgradeBtn.classList.toggle('show', rem <= 0);
+
     updateGenBtn();
   }
 
@@ -642,13 +685,28 @@ body{
     if (!name) { showFieldError('Please enter your name.'); return; }
     const phoneResult = validatePhone(phoneEl.value);
     if (!phoneResult.valid) { showFieldError(phoneResult.msg); return; }
-    clearFieldError();
+
+    // Don't burn a free code if the QR engine isn't available — e.g. the CDN
+    // library failed to load on a slow or blocked connection.
+    if (typeof QRCode === 'undefined') {
+      showFieldError('QR generator is still loading — check your connection and try again.');
+      return;
+    }
+
     const waUrl = buildWaMe(phoneEl.value);
+    try {
+      generateQR(waUrl, canvas);
+    } catch (err) {
+      showFieldError('Could not generate the QR code. Please try again.');
+      return;
+    }
+
+    // Only count the generation once it has actually succeeded.
+    clearFieldError();
     outName.textContent    = name;
     topbarName.textContent = name;
     incrementUses();
     renderCounter();
-    generateQR(waUrl, canvas);
     showOutput();
   }
 
@@ -666,6 +724,7 @@ body{
   qrIconBtn.onclick     = handleGenerate;
   backBtn.onclick       = () => isAtLimit() ? showUpgrade() : showForm();
   backToFormBtn.onclick = showForm;
+  formUpgradeBtn.onclick = showUpgrade;
   upgradeBtn.onclick    = () => alert('Premium upgrade coming soon!\n\nUnlimited codes, custom branding, and logo overlays.');
 
   dlBtn.onclick = () => {
@@ -701,6 +760,14 @@ body{
       clearTimeout(tapTimer);
       resetCounter();
     }
+  });
+
+  // Keep tabs in sync — if another tab changes the usage count, refresh the
+  // progress bar here and bounce to the gate if this tab is now at the limit.
+  window.addEventListener('storage', (e) => {
+    if (e.key !== STORAGE_KEY) return;
+    renderCounter();
+    if (isAtLimit() && formArea.style.display !== 'none') showUpgrade();
   });
 
   // Init — defer one frame so CSS transition fires on first load
