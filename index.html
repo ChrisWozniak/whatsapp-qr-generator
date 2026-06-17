@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>WhatsApp Contact QR Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 
@@ -83,6 +83,34 @@ body{
 .form-upgrade-btn:hover{background:#1ebe57;}
 .form-upgrade-btn:active{transform:scale(.98);}
 
+/* ─── Premium-only controls (hidden until upgrade) ───────────── */
+/* !important so the hide always wins over later .dl-btn display rules */
+.premium-only{display:none !important;}
+body.premium .premium-only{display:flex !important;}
+body.premium #progress-wrap{display:none;}
+.premium-controls{flex-direction:column;gap:10px;width:100%;background:#1f2c34;border-radius:12px;padding:12px 14px;margin-top:12px;}
+.pc-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.pc-label{color:#aebac1;font-size:13px;}
+.pc-swatches{display:flex;align-items:center;gap:8px;}
+.swatch{width:24px;height:24px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:border-color .15s;}
+.swatch.sel{border-color:#e9edef;}
+#qr-color{width:34px;height:28px;border:none;background:none;cursor:pointer;padding:0;}
+.pc-upload-btn{background:#2a3942;color:#e9edef;font-size:13px;padding:7px 12px;border-radius:8px;cursor:pointer;transition:background .15s;}
+.pc-upload-btn:hover{background:#374248;}
+.dl-svg{background:#2a3942;color:#e9edef;}
+.dl-svg:hover{background:#374248;}
+
+/* ─── Free live preview on the form ──────────────────────────── */
+.preview-wrap{display:none;flex-direction:column;align-items:center;gap:6px;margin-top:4px;}
+.preview-wrap.show{display:flex;}
+#preview-canvas{width:124px;height:124px;background:#fff;border-radius:10px;padding:8px;}
+.preview-label{color:#8696a0;font-size:11px;}
+/* Locked placeholder shown in place of the preview once the gate is hit */
+.preview-locked{display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  width:140px;height:140px;background:#1f2c34;border:1px dashed #3a4a54;border-radius:10px;padding:12px;text-align:center;}
+.preview-locked .lock-ico{font-size:22px;}
+.preview-locked .lock-text{color:#8696a0;font-size:11px;line-height:1.4;}
+
 /* ─── Output ─────────────────────────────────────────────────── */
 .output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
 .output-card{background:#1f2c34;border-radius:16px;width:100%;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
@@ -110,6 +138,16 @@ body{
 .upgrade-btn:hover{background:#1ebe57;}
 .back-to-form-btn{margin-top:10px;background:transparent;color:#8696a0;border:none;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;padding:8px;width:100%;text-align:center;}
 .back-to-form-btn:hover{color:#aebac1;}
+
+/* ─── Premium account (signup / login) ───────────────────────── */
+#auth-area{display:none;padding:0 16px 24px;flex-direction:column;align-items:center;flex:1;justify-content:center;}
+.auth-card input{width:100%;background:#2a3942;border:none;border-radius:8px;padding:11px 12px;color:#e9edef;font-size:14px;font-family:'Inter',sans-serif;outline:none;}
+.auth-card input::placeholder{color:#8696a0;}
+#auth-error{color:#f15c6d;font-size:12px;min-height:16px;line-height:1.4;text-align:center;}
+.link-btn{background:transparent;border:none;color:#25D366;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;padding:4px;}
+.link-btn:hover{text-decoration:underline;}
+.form-links{display:flex;justify-content:center;gap:14px;margin-top:6px;}
+body.premium #login-link{display:none;}
 
 /* ─── Desktop: iPhone frame ──────────────────────────────────── */
 @media(min-width:520px){
@@ -326,6 +364,17 @@ body{
             <input type="tel" id="f-phone" placeholder="Enter phone number (e.g. +1 415 555 1234)" maxlength="20"/>
           </div>
         </div>
+        <!-- Free live preview — updates as you type, never counts toward the limit.
+             At the gate it's replaced by a locked placeholder so an out-of-codes
+             free user can't screenshot a usable QR to bypass the freemium gate. -->
+        <div class="preview-wrap" id="preview-wrap">
+          <canvas id="preview-canvas" width="400" height="400"></canvas>
+          <div class="preview-locked" id="preview-locked">
+            <span class="lock-ico">&#128274;</span>
+            <span class="lock-text">Upgrade to Premium to preview &amp; generate more codes</span>
+          </div>
+          <span class="preview-label" id="preview-label">Live preview</span>
+        </div>
         <p id="field-error"></p>
         <button class="gen-btn" id="gen-btn">&#9726; Generate QR code</button>
         <!-- Goal-Gradient progress bar -->
@@ -338,6 +387,10 @@ body{
         <!-- Shown only once the free limit is reached, so a user who came
              back from the upgrade screen still has a path to Premium signup -->
         <button class="form-upgrade-btn" id="form-upgrade-btn">&#9889; Upgrade to Premium</button>
+        <div class="form-links">
+          <button class="link-btn" id="login-link">Already Premium? Log in</button>
+          <button class="link-btn premium-only" id="logout-link">Log out of Premium</button>
+        </div>
       </div>
 
       <div class="output" id="output-area">
@@ -355,7 +408,26 @@ body{
           </div>
           <div class="privacy">Your QR code is private. Share it so others can scan it with their WhatsApp camera to add you as a contact.</div>
         </div>
-        <button class="dl-btn" id="dl-btn">&#8595; Save QR code</button>
+
+        <!-- Premium-only customization (revealed after upgrade) -->
+        <div class="premium-controls premium-only">
+          <div class="pc-row">
+            <span class="pc-label">QR color</span>
+            <span class="pc-swatches">
+              <button type="button" class="swatch sel" data-color="#111b21" style="background:#111b21" aria-label="WhatsApp dark"></button>
+              <button type="button" class="swatch" data-color="#25D366" style="background:#25D366" aria-label="WhatsApp green"></button>
+              <input type="color" id="qr-color" value="#111b21" aria-label="Custom QR color"/>
+            </span>
+          </div>
+          <div class="pc-row">
+            <span class="pc-label">Center logo</span>
+            <label class="pc-upload-btn" for="logo-input">Upload PNG/JPG</label>
+            <input type="file" id="logo-input" accept="image/png,image/jpeg" hidden/>
+          </div>
+        </div>
+
+        <button class="dl-btn" id="dl-btn">&#8595; Save PNG</button>
+        <button class="dl-btn dl-svg premium-only" id="dl-svg-btn">&#8595; Save SVG (vector)</button>
         <button class="back-btn" id="back-btn">Edit details</button>
       </div>
 
@@ -370,12 +442,31 @@ body{
           <p>Upgrade to Premium to generate unlimited WhatsApp QR codes with custom branding.</p>
           <ul class="feature-list">
             <li>Unlimited QR code generations</li>
-            <li>WhatsApp logo overlay on every code</li>
-            <li>Custom brand colors &amp; logo</li>
+            <li>Custom QR colors</li>
+            <li>Upload your own center logo</li>
+            <li>Download as SVG — vector, print-ready</li>
           </ul>
           <button class="upgrade-btn" id="upgrade-btn">Upgrade to Premium</button>
         </div>
         <button class="back-to-form-btn" id="back-to-form-btn">Back to generator</button>
+      </div>
+
+      <!-- Premium account: sign up on upgrade, or log back in on return -->
+      <div id="auth-area">
+        <div class="upgrade-card auth-card">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8.5" r="4" fill="#25D366"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#25D366" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+          </svg>
+          <h2 id="auth-title">Create your Premium account</h2>
+          <p id="auth-sub">Save a username + 4-digit passcode to keep Premium across visits.</p>
+          <input type="text" id="auth-user" placeholder="Username" maxlength="20" autocomplete="off"/>
+          <input type="text" id="auth-code" placeholder="4-digit passcode" maxlength="4" inputmode="numeric" autocomplete="off"/>
+          <p id="auth-error"></p>
+          <button class="upgrade-btn" id="auth-submit">Create account &amp; unlock</button>
+          <button class="link-btn" id="auth-toggle">Already have an account? Log in</button>
+        </div>
+        <button class="back-to-form-btn" id="auth-back">Back to generator</button>
       </div>
 
     </div><!-- .app -->
@@ -403,8 +494,56 @@ body{
   const formUpgradeBtn = document.getElementById('form-upgrade-btn');
   const fieldError    = document.getElementById('field-error');
 
-  const STORAGE_KEY = 'waqr_uses';
-  const MAX_FREE    = 3;
+  const STORAGE_KEY  = 'waqr_uses';
+  const ACCOUNTS_KEY = 'waqr_accounts';   // { username: { code: "1234" } }, up to 3
+  const SESSION_KEY  = 'waqr_session';     // username of the logged-in Premium user
+  const MAX_FREE     = 3;
+  const MAX_ACCOUNTS = 3;
+
+  // --- Premium state (persisted via a local account + session) ---
+  let isPremium    = false;
+  let currentColor = '#111b21';
+  let currentLogo  = null;   // uploaded logo Image, or null for the default WhatsApp icon
+  let lastQrText   = '';     // text of the QR currently shown, for live re-render
+
+  const qrColor       = document.getElementById('qr-color');
+  const logoInput     = document.getElementById('logo-input');
+  const dlSvgBtn      = document.getElementById('dl-svg-btn');
+  const previewWrap   = document.getElementById('preview-wrap');
+  const previewCanvas = document.getElementById('preview-canvas');
+  const previewLocked = document.getElementById('preview-locked');
+  const previewLabel  = document.getElementById('preview-label');
+
+  const authArea   = document.getElementById('auth-area');
+  const authTitle  = document.getElementById('auth-title');
+  const authSub    = document.getElementById('auth-sub');
+  const authUser   = document.getElementById('auth-user');
+  const authCode   = document.getElementById('auth-code');
+  const authError  = document.getElementById('auth-error');
+  const authSubmit = document.getElementById('auth-submit');
+  const authToggle = document.getElementById('auth-toggle');
+  const authBack   = document.getElementById('auth-back');
+  const loginLink  = document.getElementById('login-link');
+  const logoutLink = document.getElementById('logout-link');
+
+  // --- Local account store (demo only — passcodes are kept in plain
+  // localStorage, which is NOT secure; a real product needs a backend) ---
+  function getAccounts() {
+    try { return JSON.parse(localStorage.getItem(ACCOUNTS_KEY)) || {}; } catch(e) { return {}; }
+  }
+  function saveAccounts(obj) {
+    try { localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(obj)); } catch(e) {}
+  }
+  function getSession()  { try { return localStorage.getItem(SESSION_KEY) || ''; } catch(e) { return ''; } }
+  function setSession(u) { try { localStorage.setItem(SESSION_KEY, u); } catch(e) {} }
+  function clearSession(){ try { localStorage.removeItem(SESSION_KEY); } catch(e) {} }
+
+  // The freemium gate applies only to free users who've hit the limit.
+  function atGate() { return !isPremium && isAtLimit(); }
+  function applyPremiumUI() { document.body.classList.toggle('premium', isPremium); }
+  function reRenderQR() {
+    if (lastQrText) generateQR(lastQrText, canvas, { color: currentColor, logo: currentLogo });
+  }
 
   function getUses() {
     try {
@@ -420,9 +559,13 @@ body{
   function isAtLimit() { return getUses() >= MAX_FREE; }
 
   function updateGenBtn() {
-    const filled = nameEl.value.trim().length > 0 && phoneEl.value.trim().length > 0;
-    genBtn.disabled = !filled || isAtLimit();
-    if (filled) clearFieldError();
+    // Button only activates when the name is present AND the phone number is a
+    // valid length (7–15 digits, international convention) — not just non-empty —
+    // so a stray "+1" can't be turned into a QR code.
+    const nameOk  = nameEl.value.trim().length > 0;
+    const phoneOk = validatePhone(phoneEl.value).valid;
+    genBtn.disabled = !(nameOk && phoneOk) || atGate();
+    if (nameOk && phoneOk) clearFieldError();
   }
 
   function renderCounter() {
@@ -448,7 +591,7 @@ body{
 
     // At the gate, surface a button to reach the Premium signup screen
     // (the Generate button is disabled here, so this is the only path).
-    formUpgradeBtn.classList.toggle('show', rem <= 0);
+    formUpgradeBtn.classList.toggle('show', atGate());
 
     updateGenBtn();
   }
@@ -457,16 +600,79 @@ body{
     formArea.style.display    = 'flex';
     outputArea.style.display  = 'none';
     upgradeArea.style.display = 'none';
+    authArea.style.display    = 'none';
+    renderPreview();   // refresh preview/lock state for the current gate status
   }
   function showOutput() {
     formArea.style.display    = 'none';
     outputArea.style.display  = 'flex';
     upgradeArea.style.display = 'none';
+    authArea.style.display    = 'none';
   }
   function showUpgrade() {
     formArea.style.display    = 'none';
     outputArea.style.display  = 'none';
     upgradeArea.style.display = 'flex';
+    authArea.style.display    = 'none';
+  }
+
+  // Premium account screen — mode is 'signup' or 'login'.
+  let authMode = 'signup';
+  function showAuth(mode) {
+    authMode = mode;
+    authError.textContent = '';
+    authUser.value = '';
+    authCode.value = '';
+    if (mode === 'signup') {
+      authTitle.textContent  = 'Create your Premium account';
+      authSub.textContent    = 'Save a username + 4-digit passcode to keep Premium across visits.';
+      authSubmit.textContent = 'Create account & unlock';
+      authToggle.textContent = 'Already have an account? Log in';
+    } else {
+      authTitle.textContent  = 'Log in to Premium';
+      authSub.textContent    = 'Enter the username and 4-digit passcode you signed up with.';
+      authSubmit.textContent = 'Log in';
+      authToggle.textContent = 'Need an account? Create one';
+    }
+    formArea.style.display    = 'none';
+    outputArea.style.display  = 'none';
+    upgradeArea.style.display = 'none';
+    authArea.style.display    = 'flex';
+  }
+
+  function unlockPremium(username) {
+    isPremium = true;
+    setSession(username);
+    applyPremiumUI();
+    renderCounter();
+    if (lastQrText) { reRenderQR(); showOutput(); }
+    else            { showForm(); }
+  }
+
+  function logout() {
+    isPremium = false;
+    clearSession();
+    applyPremiumUI();
+    renderCounter();
+    showForm();
+  }
+
+  function handleAuthSubmit() {
+    const user = authUser.value.trim();
+    const code = authCode.value.trim();
+    if (user.length < 1)        { authError.textContent = 'Please enter a username.'; return; }
+    if (!/^\d{4}$/.test(code))  { authError.textContent = 'Passcode must be exactly 4 digits.'; return; }
+    const accounts = getAccounts();
+    if (authMode === 'signup') {
+      if (accounts[user])                              { authError.textContent = 'That username is taken — log in instead.'; return; }
+      if (Object.keys(accounts).length >= MAX_ACCOUNTS){ authError.textContent = 'Demo limit reached (3 accounts). Reset with Ctrl+\\.'; return; }
+      accounts[user] = { code: code };
+      saveAccounts(accounts);
+      unlockPremium(user);
+    } else {
+      if (!accounts[user] || accounts[user].code !== code) { authError.textContent = 'Wrong username or passcode.'; return; }
+      unlockPremium(user);
+    }
   }
 
   function sanitizeName(raw) {
@@ -506,48 +712,119 @@ body{
     ctx.restore();
   }
 
-  function generateQR(text, targetCanvas) {
-    const SIZE = 400;
+  const QR_SIZE   = 400; // px
+  const QR_MARGIN = 4;   // quiet zone, in modules
+
+  // Builds the QR module matrix for a given text (level H so a centered logo
+  // doesn't break scannability). Shared by the canvas and SVG renderers.
+  function buildMatrix(text) {
+    const qr = qrcode(0, 'H');
+    qr.addData(text);
+    qr.make();
+    return qr;
+  }
+
+  // Computes a centered, contain-fit logo box for a given image aspect ratio,
+  // so the WHOLE logo shows (no cropping). Shared by the canvas + SVG renderers.
+  function logoBox(size, ar) {
+    const maxW = size * 0.30, maxH = size * 0.24;
+    let w = maxW, h = w / ar;
+    if (h > maxH) { h = maxH; w = h * ar; }
+    return { w: w, h: h, x: (size - w) / 2, y: (size - h) / 2, pad: size * 0.025 };
+  }
+
+  // Draws an uploaded logo centered on a white rounded backing, contain-fit so
+  // the entire logo is visible (wide logos like wordmarks are not cut off).
+  function drawImageLogo(ctx, size, img) {
+    const b = logoBox(size, (img.width || 1) / (img.height || 1));
+    ctx.save();
+    rrect(ctx, b.x - b.pad, b.y - b.pad, b.w + b.pad * 2, b.h + b.pad * 2, Math.min(b.w, b.h) * 0.2 + b.pad);
+    ctx.fillStyle = '#ffffff'; ctx.fill();
+    ctx.restore();
+    ctx.drawImage(img, b.x, b.y, b.w, b.h);   // full logo, no crop
+  }
+
+  // Renders a QR onto a canvas. opts: { color, logo } — logo is an HTMLImageElement
+  // (uploaded) or null to fall back to the default WhatsApp icon.
+  function generateQR(text, targetCanvas, opts) {
+    opts = opts || {};
+    const color = opts.color || '#111b21';
+    const SIZE  = QR_SIZE;
     targetCanvas.width  = SIZE;
     targetCanvas.height = SIZE;
     const ctx = targetCanvas.getContext('2d');
 
-    const tmp = document.createElement('div');
-    tmp.style.cssText = 'position:fixed;left:-9999px;top:-9999px;visibility:hidden;';
-    document.body.appendChild(tmp);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
 
-    new QRCode(tmp, {
-      text: text,
-      width: SIZE,
-      height: SIZE,
-      colorDark: '#111b21',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-
-    const innerCanvas = tmp.querySelector('canvas');
-    if (innerCanvas) {
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, SIZE, SIZE);
-      ctx.drawImage(innerCanvas, 0, 0, SIZE, SIZE);
-      document.body.removeChild(tmp);
-      drawLogoOverlay(ctx, SIZE);
-    } else {
-      setTimeout(() => {
-        const img = tmp.querySelector('img');
-        if (img && img.src) {
-          const image = new Image();
-          image.onload = () => {
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, SIZE, SIZE);
-            ctx.drawImage(image, 0, 0, SIZE, SIZE);
-            drawLogoOverlay(ctx, SIZE);
-          };
-          image.src = img.src;
+    const qr    = buildMatrix(text);
+    const count = qr.getModuleCount();
+    const cell  = SIZE / (count + QR_MARGIN * 2);
+    ctx.fillStyle = color;
+    for (let r = 0; r < count; r++) {
+      for (let c = 0; c < count; c++) {
+        if (qr.isDark(r, c)) {
+          // Math.ceil avoids hairline gaps between modules.
+          ctx.fillRect(
+            Math.floor((c + QR_MARGIN) * cell),
+            Math.floor((r + QR_MARGIN) * cell),
+            Math.ceil(cell), Math.ceil(cell)
+          );
         }
-        if (tmp.parentNode) document.body.removeChild(tmp);
-      }, 150);
+      }
     }
+
+    if (opts.logo) drawImageLogo(ctx, SIZE, opts.logo);
+    else           drawLogoOverlay(ctx, SIZE);
+  }
+
+  // Emits a vector SVG of the QR from the same matrix. Only numeric coords and
+  // a base64 logo are written — no user text is injected (injection-safe).
+  function buildQrSvg(text, opts) {
+    opts = opts || {};
+    const color = opts.color || '#111b21';
+    const SIZE  = QR_SIZE;
+    const qr    = buildMatrix(text);
+    const count = qr.getModuleCount();
+    const cell  = SIZE / (count + QR_MARGIN * 2);
+
+    let rects = '';
+    for (let r = 0; r < count; r++) {
+      for (let c = 0; c < count; c++) {
+        if (qr.isDark(r, c)) {
+          rects += '<rect x="' + ((c + QR_MARGIN) * cell).toFixed(2) +
+                   '" y="' + ((r + QR_MARGIN) * cell).toFixed(2) +
+                   '" width="' + cell.toFixed(2) + '" height="' + cell.toFixed(2) + '"/>';
+        }
+      }
+    }
+
+    let logoSvg;
+    if (opts.logo) {
+      const b = logoBox(SIZE, (opts.logo.width || 1) / (opts.logo.height || 1));
+      logoSvg =
+        '<rect x="' + (b.x - b.pad).toFixed(2) + '" y="' + (b.y - b.pad).toFixed(2) +
+          '" width="' + (b.w + b.pad * 2).toFixed(2) + '" height="' + (b.h + b.pad * 2).toFixed(2) +
+          '" rx="' + (Math.min(b.w, b.h) * 0.2 + b.pad).toFixed(2) + '" fill="#ffffff"/>' +
+        '<image x="' + b.x.toFixed(2) + '" y="' + b.y.toFixed(2) +
+          '" width="' + b.w.toFixed(2) + '" height="' + b.h.toFixed(2) +
+          '" preserveAspectRatio="xMidYMid meet" href="' + opts.logo.src + '"/>';
+    } else {
+      const r = SIZE * 0.09, cx = SIZE / 2, scale = (r * 1.4) / 24;
+      const t = (cx - 12 * scale).toFixed(3);
+      const PHONE = 'M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z';
+      logoSvg =
+        '<circle cx="' + cx + '" cy="' + cx + '" r="' + (r + 3).toFixed(2) + '" fill="#ffffff"/>' +
+        '<circle cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" fill="#25D366"/>' +
+        '<path transform="translate(' + t + ',' + t + ') scale(' + scale.toFixed(4) + ')" d="' + PHONE + '" fill="#ffffff"/>';
+    }
+
+    return '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ' +
+        'width="' + SIZE + '" height="' + SIZE + '" viewBox="0 0 ' + SIZE + ' ' + SIZE + '">' +
+        '<rect width="' + SIZE + '" height="' + SIZE + '" fill="#ffffff"/>' +
+        '<g fill="' + color + '">' + rects + '</g>' + logoSvg +
+      '</svg>';
   }
 
   function rrect(ctx, x, y, w, h, r) {
@@ -680,7 +957,7 @@ body{
   }
 
   function handleGenerate() {
-    if (isAtLimit()) { showUpgrade(); return; }
+    if (atGate()) { showUpgrade(); return; }
     const name = sanitizeName(nameEl.value);
     if (!name) { showFieldError('Please enter your name.'); return; }
     const phoneResult = validatePhone(phoneEl.value);
@@ -688,24 +965,25 @@ body{
 
     // Don't burn a free code if the QR engine isn't available — e.g. the CDN
     // library failed to load on a slow or blocked connection.
-    if (typeof QRCode === 'undefined') {
+    if (typeof qrcode === 'undefined') {
       showFieldError('QR generator is still loading — check your connection and try again.');
       return;
     }
 
     const waUrl = buildWaMe(phoneEl.value);
     try {
-      generateQR(waUrl, canvas);
+      generateQR(waUrl, canvas, { color: currentColor, logo: currentLogo });
     } catch (err) {
       showFieldError('Could not generate the QR code. Please try again.');
       return;
     }
 
     // Only count the generation once it has actually succeeded.
+    lastQrText = waUrl;
     clearFieldError();
     outName.textContent    = name;
     topbarName.textContent = name;
-    incrementUses();
+    if (!isPremium) incrementUses();   // premium users generate unlimited codes
     renderCounter();
     showOutput();
   }
@@ -718,14 +996,58 @@ body{
   phoneEl.addEventListener('input', () => {
     clearFieldError();
     updateGenBtn();
+    schedulePreview();
   });
+
+  // --- Free live preview (debounced 300ms, never counts) ---
+  let previewTimer = null;
+  function renderPreview() {
+    const digits = phoneEl.value.trim().replace(/\D/g, '');
+    const validLen = digits.length >= 7 && digits.length <= 15;
+    if (!validLen || typeof qrcode === 'undefined') {
+      previewWrap.classList.remove('show');
+      return;
+    }
+    if (atGate()) {
+      // Free user out of codes: show a locked placeholder, never a usable QR,
+      // so the preview can't be screenshotted to bypass the gate.
+      previewCanvas.style.display = 'none';
+      previewLabel.style.display  = 'none';
+      previewLocked.style.display = 'flex';
+      previewWrap.classList.add('show');
+      return;
+    }
+    try {
+      generateQR(buildWaMe(phoneEl.value), previewCanvas, { color: currentColor, logo: currentLogo });
+      previewCanvas.style.display = 'block';
+      previewLabel.style.display  = 'block';
+      previewLocked.style.display = 'none';
+      previewWrap.classList.add('show');
+    } catch (e) {
+      previewWrap.classList.remove('show');
+    }
+  }
+  function schedulePreview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(renderPreview, 300);
+  }
 
   genBtn.onclick        = handleGenerate;
   qrIconBtn.onclick     = handleGenerate;
-  backBtn.onclick       = () => isAtLimit() ? showUpgrade() : showForm();
+  backBtn.onclick       = () => atGate() ? showUpgrade() : showForm();
   backToFormBtn.onclick = showForm;
   formUpgradeBtn.onclick = showUpgrade;
-  upgradeBtn.onclick    = () => alert('Premium upgrade coming soon!\n\nUnlimited codes, custom branding, and logo overlays.');
+
+  // Upgrade pitch -> account creation -> unlock. Returning users log in.
+  upgradeBtn.onclick  = () => showAuth('signup');
+  authSubmit.onclick  = handleAuthSubmit;
+  authToggle.onclick  = () => showAuth(authMode === 'signup' ? 'login' : 'signup');
+  authBack.onclick    = showForm;
+  loginLink.onclick   = () => showAuth('login');
+  logoutLink.onclick  = logout;
+  authCode.addEventListener('input', () => { authCode.value = authCode.value.replace(/\D/g, ''); });
+  authCode.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAuthSubmit(); });
+  authUser.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAuthSubmit(); });
 
   dlBtn.onclick = () => {
     const dc = buildDownloadCanvas();
@@ -735,12 +1057,63 @@ body{
     a.click();
   };
 
+  // --- Premium: custom color ---
+  function selectColor(hex) {
+    currentColor = hex;
+    if (qrColor) qrColor.value = hex;
+    document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === hex));
+    reRenderQR();
+  }
+  document.querySelectorAll('.swatch').forEach(s => { s.onclick = () => selectColor(s.dataset.color); });
+  if (qrColor) qrColor.addEventListener('input', () => selectColor(qrColor.value));
+
+  // --- Premium: logo upload ---
+  if (logoInput) logoInput.addEventListener('change', () => {
+    const file = logoInput.files && logoInput.files[0];
+    if (!file) return;
+    if (!/^image\/(png|jpeg)$/.test(file.type)) {
+      alert('Please choose a PNG or JPG image.');
+      logoInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => { currentLogo = img; reRenderQR(); };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // --- Premium: SVG (vector) download ---
+  if (dlSvgBtn) dlSvgBtn.onclick = () => {
+    if (!lastQrText) return;
+    const svg  = buildQrSvg(lastQrText, { color: currentColor, logo: currentLogo });
+    const blob = new Blob([svg], { type: 'image/svg+xml' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.download = (sanitizeName(nameEl.value).replace(/[^a-zA-Z0-9 _-]/g, '').trim() || 'contact') + '-whatsapp-qr.svg';
+    a.href     = url;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Full demo reset — clears the counter AND all saved accounts/session and
+  // drops back to a pristine free state, so a presentation can start clean.
   function resetCounter() {
-    try { localStorage.removeItem(STORAGE_KEY); } catch(err) {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(ACCOUNTS_KEY);
+      localStorage.removeItem(SESSION_KEY);
+    } catch(err) {}
+    isPremium    = false;
+    currentColor = '#111b21';
+    currentLogo  = null;
+    applyPremiumUI();
     renderCounter();
     showForm();
     const sub = document.getElementById('topbar-sub');
-    sub.textContent = 'Counter reset!';
+    sub.textContent = 'Demo reset!';
     setTimeout(() => { sub.textContent = 'WhatsApp contact'; }, 1500);
   }
 
@@ -767,13 +1140,18 @@ body{
   window.addEventListener('storage', (e) => {
     if (e.key !== STORAGE_KEY) return;
     renderCounter();
-    if (isAtLimit() && formArea.style.display !== 'none') showUpgrade();
+    if (atGate() && formArea.style.display !== 'none') showUpgrade();
   });
+
+  // Restore a logged-in Premium session so it persists across reloads.
+  const sess = getSession();
+  if (sess && getAccounts()[sess]) isPremium = true;
+  applyPremiumUI();
 
   // Init — defer one frame so CSS transition fires on first load
   requestAnimationFrame(() => {
     renderCounter();
-    if (isAtLimit()) showUpgrade();
+    if (atGate()) showUpgrade();
     else showForm();
   });
 </script>

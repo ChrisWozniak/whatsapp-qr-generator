@@ -50,15 +50,25 @@ Based on the *Week 2 Improvements* PRD (Goal-Gradient Progress Bar + Premium Fea
 - **Realistic iPhone device frame (desktop)** — on screens ≥ 520 px the app is rendered inside a true-to-life iPhone 17 frame: black anodized casing, Dynamic Island, iOS status bar (9:41, signal, Wi-Fi, battery), and physical side buttons (mute, volume, power). The frame uses authentic **iPhone 17 proportions (~19.5:9)** and scales fluidly to the viewport — capped at 902 px tall on large monitors and shrinking on smaller screens while preserving its shape — and stays centered. On mobile the frame is hidden and the app fills the screen as a normal full-screen web app.
 - **Edge-case hardening of the freemium gate** — the counter logic was stress-tested against tampering, multi-tab use, slow connections, and disabled JavaScript (see [Edge-case hardening & known limitations](#edge-case-hardening--known-limitations) below).
 
+#### Premium experience (the full free → sign-up → premium loop)
+
+The mocked upgrade was replaced with a real, in-app premium tier. Everything renders inside the same iPhone frame; the screens swap in order: **freemium → sign-up → premium**.
+
+- **Live QR preview (free)** — a QR preview updates as the user types (300 ms debounce) and **never counts** toward the limit. Once all 3 free codes are used it is replaced by a 🔒 *"Upgrade to Premium"* placeholder, so an out-of-codes user can't screenshot a usable code to bypass the gate.
+- **Local Premium account (sign-up on upgrade)** — clicking **Upgrade to Premium** opens a "Create your Premium account" screen (**username + 4-digit passcode**). The account is saved to `localStorage` (up to 3 users) and unlocks premium. Returning users use **"Already Premium? Log in"** to restore access; premium also **persists across reloads** via a saved session. A **"Log out of Premium"** link returns to the free tier. *Demo only — passcodes are stored in plain `localStorage`, which is not secure; a real product needs a backend.*
+- **Unlimited generations** — premium users bypass the 3-code gate; the progress bar is hidden.
+- **Custom QR color** — premium users recolor the QR in real time via swatches (WhatsApp dark/green) or a custom color picker.
+- **Center logo upload** — premium users upload a PNG/JPG logo; it's centered on a white backing and **contain-fit so the whole logo shows (no cropping)**, sized to stay scannable under the QR's level-H error correction.
+- **SVG (vector) export** — premium users download a print-ready vector SVG (with their custom color + logo) in addition to the branded PNG card.
+- **Full demo reset** — **Ctrl+\\** (or 5 taps on the subtitle) now clears the counter **and** all saved accounts/session, returning to a pristine free state for a clean presentation.
+
 ### Still planned
 
-- **Payment / Premium unlock** — real upgrade flow replacing the placeholder alert
-- **Unlimited generations** — no cap for Premium users
-- **Custom brand colors** — user-selectable QR foreground and background colors
-- **Custom logo upload** — replace the default WhatsApp overlay with the user's own logo
-- **SVG / PDF export** — additional download formats for print-quality output
-- **Live QR preview** — preview that updates as the user types
-- **Persistent Premium state** — remember paid status across sessions
+- **Real payment processing** — upgrade is still simulated locally (no Stripe); accounts are a client-side mock
+- **PDF export** — additional print format beyond PNG/SVG
+- **Download-format hints & dedicated hex field** — P1/P2 polish for the export and color controls
+- **Remove-logo control & logo-size scan warning** — P1/P2 polish for the logo feature
+- **Server-side accounts** — real authentication/persistence to replace the local `localStorage` mock
 
 ---
 
@@ -69,10 +79,10 @@ Based on the *Week 2 Improvements* PRD (Goal-Gradient Progress Bar + Premium Fea
 | Markup | HTML5 |
 | Styling | CSS3 (custom, no framework) |
 | Logic | Vanilla JavaScript (ES6+) |
-| QR encoding | [QRCodeJS 1.0.0](https://github.com/davidshimjs/qrcodejs) via CDN |
-| QR rendering & export | Canvas API + Path2D |
+| QR encoding | [qrcode-generator 1.4.4](https://github.com/kazuhikoarase/qrcode-generator) via CDN (exposes the module matrix for canvas + SVG, custom color, and logo) |
+| QR rendering & export | Canvas API + Path2D (PNG) and hand-built SVG (vector) from the same matrix |
 | Fonts | Google Fonts — Inter (400, 500, 600) |
-| State persistence | `localStorage` (freemium counter) |
+| State persistence | `localStorage` — freemium counter, plus Premium accounts + session (demo mock) |
 | Hosting | Static file — no server required |
 
 No build step, no bundler, no framework. Open `index.html` in a browser and it works.
