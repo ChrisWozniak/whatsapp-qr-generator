@@ -162,3 +162,5 @@ cd whatsapp-qr-generator
 ```
 
 The app works fully offline after the initial CDN load (QRCodeJS + Inter font).
+this is my update njh
+
