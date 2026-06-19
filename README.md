@@ -6,6 +6,21 @@ Built by **Chris Wozniak** and **Nathan Hutton** as a two-stage group project.
 
 ---
 
+## Live demo & deployment
+
+The app is a single self-contained `index.html` (plus one CDN script), so it deploys as a static site with no build step.
+
+- **Live app:** https://chriswozniak.github.io/whatsapp-qr-generator/
+- **Scan-to-try QR page:** https://chriswozniak.github.io/whatsapp-qr-generator/share-qr.html
+
+**Deployed via GitHub Pages** from the `Chris-Wozniak-2` branch (Settings → Pages → *Deploy from a branch* → `Chris-Wozniak-2` / root).
+
+**`share-qr.html`** renders a high-resolution QR code that points to the live app (with a *Download PNG* button) — project it full-screen so a room can scan it at once to open the app on their own phones. It uses the same `qrcode-generator` library as the app, with no extra dependencies.
+
+**Clean demo entry (`?fresh`)** — opening the app as `…/?fresh` (or `?reset`) clears the freemium counter and any logged-in session, so every visitor lands on a pristine free tier (**0 of 3 used**). The flag is then stripped from the URL, so a tester's later refresh keeps their own progress. The share-QR page encodes the `?fresh` URL, so **every scan starts clean** regardless of the device's prior testing.
+
+---
+
 ## What it does
 
 Enter your name and phone number, click Generate, and the app produces a QR code that encodes a `wa.me/` deep link. Anyone who scans it with their phone camera is taken directly into a WhatsApp conversation with you — no manual number entry required.
