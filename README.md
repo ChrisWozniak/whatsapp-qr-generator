@@ -13,6 +13,7 @@ The app is a single self-contained `index.html` (plus one CDN script), so it dep
 - **Live app:** https://chriswozniak.github.io/whatsapp-qr-generator/
 - **Scan-to-try QR page:** https://chriswozniak.github.io/whatsapp-qr-generator/share-qr.html
 - **Pitch slides:** https://chriswozniak.github.io/whatsapp-qr-generator/presentation-slides.html
+- **Pitch script:** https://chriswozniak.github.io/whatsapp-qr-generator/presentation-pitch.html
 
 **Deployed via GitHub Pages** from the `Chris-Wozniak-2` branch (Settings → Pages → *Deploy from a branch* → `Chris-Wozniak-2` / root).
 
