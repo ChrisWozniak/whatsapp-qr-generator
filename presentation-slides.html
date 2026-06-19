@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>WhatsApp QR Generator — Pitch Slides</title>
+<style>
+  :root{
+    --bg:#0c191e; --panel:#16262d; --panel2:#1b2d35; --line:#24383f;
+    --green:#25D366; --greenNum:#37d982; --amber:#f0a83a;
+    --text:#e9edef; --muted:#8aa0a8;
+    --lightBg:#f5f8f9; --lightCard:#ffffff; --lightText:#0e1a1f; --lightMuted:#5d6e75;
+    --serif:Georgia,'Times New Roman',serif;
+    --sans:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;background:#000;font-family:var(--sans);overflow:hidden;}
+
+  /* A slide is a full-screen flex container; only the active one is shown. */
+  .slide{display:none;width:100vw;height:100vh;align-items:center;justify-content:center;}
+  .slide.active{display:flex;}
+
+  /* The fixed-size canvas, scaled to fit the window. */
+  .stage{flex:none;width:1280px;height:720px;transform:scale(var(--s,1));transform-origin:center center;
+         position:relative;overflow:hidden;}
+
+  .eyebrow{color:var(--green);font-size:17px;font-weight:700;letter-spacing:.28em;text-transform:uppercase;}
+  .credit{position:absolute;left:64px;bottom:38px;color:var(--muted);font-size:15px;}
+
+  /* ---------- SLIDE 1 — THE PROBLEM ---------- */
+  .s1{background:var(--bg);color:var(--text);padding:70px 64px;}
+  .s1 .cols{display:flex;gap:54px;height:100%;}
+  .s1 .left{flex:1.35;display:flex;flex-direction:column;}
+  .s1 h1{font-family:var(--serif);font-weight:700;font-size:58px;line-height:1.12;margin:26px 0 30px;max-width:680px;}
+  .s1 .statement{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px 26px;max-width:660px;font-size:21px;line-height:1.55;color:#cfd9dd;}
+  .s1 .statement .g{color:var(--green);font-weight:700;}
+  .s1 .statement .a{color:var(--amber);font-weight:700;}
+  .s1 .statement em{font-style:italic;}
+  .s1 .right{flex:1;display:flex;flex-direction:column;justify-content:center;gap:24px;}
+  .s1 .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:30px 34px;text-align:center;}
+  .s1 .stat .num{font-family:var(--serif);color:var(--greenNum);font-weight:700;font-size:62px;line-height:1;}
+  .s1 .stat .lbl{color:var(--muted);font-size:18px;margin-top:12px;}
+
+  /* ---------- SLIDE 2 — THE SOLUTION (light) ---------- */
+  .s2{background:var(--lightBg);color:var(--lightText);padding:64px 64px 0;display:flex;flex-direction:column;}
+  .s2 .eyebrow{color:#13a05a;}
+  .s2 h1{font-family:var(--serif);font-weight:700;font-size:54px;margin:14px 0 14px;}
+  .s2 .sub{color:var(--lightMuted);font-size:23px;margin-bottom:34px;}
+  .s2 .cards{display:flex;gap:26px;flex:1;}
+  .s2 .card{flex:1;background:var(--lightCard);border:1px solid #e4eaec;border-radius:16px;padding:30px 28px;box-shadow:0 6px 20px rgba(0,0,0,.05);display:flex;flex-direction:column;}
+  .s2 .badge{width:62px;height:62px;border-radius:50%;background:var(--green);color:#06281b;font-weight:700;font-size:26px;display:flex;align-items:center;justify-content:center;}
+  .s2 .card h2{font-family:var(--serif);font-size:34px;margin:24px 0 18px;}
+  .s2 .card p{color:var(--lightMuted);font-size:19px;line-height:1.5;}
+  .s2 .band{margin:30px -64px 0;background:#e7f7ee;color:#0f6b3c;font-size:18px;text-align:center;padding:15px 40px;}
+  .s2 .credit{position:static;margin:14px 0 18px;color:#9aa9af;}
+
+  /* ---------- SLIDE 3 — FREEMIUM VS PREMIUM ---------- */
+  .s3{background:var(--bg);color:var(--text);padding:54px 60px;display:flex;flex-direction:column;}
+  .s3 h1{font-family:var(--serif);font-weight:700;font-size:46px;margin:12px 0 24px;}
+  .s3 .grid{display:flex;gap:24px;flex:1;align-items:stretch;}
+  .s3 .col{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px 24px;display:flex;flex-direction:column;}
+  .s3 .mid{flex:.72;background:transparent;border:none;align-items:center;justify-content:center;gap:14px;}
+  .s3 .pill{display:inline-block;font-weight:700;font-size:22px;padding:9px 26px;border-radius:10px;}
+  .s3 .pill.free{background:var(--green);color:#06281b;}
+  .s3 .pill.prem{background:var(--amber);color:#3a2600;}
+  .s3 .colhead{color:var(--muted);font-size:16px;margin:15px 0 4px;}
+  .s3 ul{list-style:none;display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+  .s3 li{display:flex;align-items:flex-start;gap:11px;font-size:18px;line-height:1.3;}
+  .s3 .ck{flex:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;margin-top:1px;}
+  .s3 .free .ck{background:var(--green);color:#06281b;}
+  .s3 .prem .ck{background:var(--amber);color:#3a2600;}
+  .s3 .upbtn{background:var(--green);color:#06281b;font-weight:700;font-size:21px;padding:14px 30px;border-radius:12px;}
+  .s3 .arrow{color:var(--green);font-size:26px;}
+  .s3 .acct{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:18px;width:230px;text-align:center;}
+  .s3 .acct .t{color:var(--amber);font-weight:700;font-size:17px;margin-bottom:12px;}
+  .s3 .acct .fl{text-align:left;color:var(--muted);font-size:13px;margin:8px 0 4px;}
+  .s3 .acct .inp{height:26px;background:#0e1a1f;border:1px solid var(--line);border-radius:6px;}
+  .s3 .acct .su{margin-top:14px;background:var(--amber);color:#3a2600;font-weight:700;font-size:14px;padding:8px;border-radius:7px;}
+  .s3 .tech{color:var(--muted);font-size:15px;text-align:center;margin-top:20px;}
+
+  /* ---------- Nav ---------- */
+  .nav{position:fixed;right:22px;bottom:18px;display:flex;align-items:center;gap:14px;z-index:50;color:#cfd9dd;}
+  .nav button{background:rgba(255,255,255,.08);color:#e9edef;border:1px solid rgba(255,255,255,.18);
+       width:42px;height:42px;border-radius:50%;font-size:20px;cursor:pointer;}
+  .nav button:hover{background:rgba(255,255,255,.18);}
+  .counter{font-size:15px;min-width:46px;text-align:center;}
+  .hint{position:fixed;left:22px;bottom:22px;color:rgba(255,255,255,.4);font-size:13px;z-index:50;}
+
+  @media print{
+    html,body{overflow:visible;background:#fff;height:auto;}
+    @page{size:1280px 720px;margin:0;}
+    .slide{display:flex !important;page-break-after:always;height:720px;width:1280px;}
+    .stage{transform:none;}
+    .nav,.hint{display:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ SLIDE 1 ============ -->
+<section class="slide active">
+  <div class="stage s1">
+    <div class="cols">
+      <div class="left">
+        <div class="eyebrow">The Problem</div>
+        <h1>Sharing your WhatsApp contact in the real world is broken.</h1>
+        <div class="statement">
+          <span class="g">Small business owners</span> experience <span class="a">contact friction</span>
+          at networking events because <em>no standalone tool generates a WhatsApp QR code</em>,
+          resulting in <span class="a">missed connections and lost business.</span>
+        </div>
+      </div>
+      <div class="right">
+        <div class="stat"><div class="num">2B+</div><div class="lbl">WhatsApp active users globally</div></div>
+        <div class="stat"><div class="num">89M</div><div class="lbl">US users scanned a QR code last year</div></div>
+        <div class="stat"><div class="num">$3.5B</div><div class="lbl">QR code market forecast by 2030</div></div>
+      </div>
+    </div>
+    <div class="credit">Chris Wozniak &amp; Nathan Hutton · AI-Native L2 · June 2026</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 2 ============ -->
+<section class="slide">
+  <div class="stage s2">
+    <div class="eyebrow">The Solution</div>
+    <h1>WhatsApp QR Generator</h1>
+    <div class="sub">Generate a scannable WhatsApp contact QR code in under 30 seconds — no app, no account, no friction.</div>
+    <div class="cards">
+      <div class="card">
+        <div class="badge">1</div><h2>Enter</h2>
+        <p>Type your name and WhatsApp phone number — the tool validates and formats it automatically.</p>
+      </div>
+      <div class="card">
+        <div class="badge">2</div><h2>Generate</h2>
+        <p>Click Generate — a scannable WhatsApp QR code appears instantly, styled in WhatsApp green.</p>
+      </div>
+      <div class="card">
+        <div class="badge">3</div><h2>Download</h2>
+        <p>Download your QR card as PNG — scan ready for business cards, flyers, or digital sharing.</p>
+      </div>
+    </div>
+    <div class="band">Freemium model: 3 free QR codes · upgrade unlocks unlimited generations, custom colors, logo upload, pre-filled messages, saved codes, and SVG download</div>
+    <div class="credit">Chris Wozniak &amp; Nathan Hutton · AI-Native L2 · June 2026</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 3 ============ -->
+<section class="slide">
+  <div class="stage s3">
+    <div class="eyebrow">Under the Hood</div>
+    <h1>Freemium vs Premium — what's included</h1>
+    <div class="grid">
+      <div class="col free">
+        <div><span class="pill free">FREE</span></div>
+        <div class="colhead">3 free QR code generations</div>
+        <ul>
+          <li><span class="ck">✓</span>Name + phone number input</li>
+          <li><span class="ck">✓</span>Instant QR code generation</li>
+          <li><span class="ck">✓</span>Live QR preview as you type</li>
+          <li><span class="ck">✓</span>WhatsApp green visual design</li>
+          <li><span class="ck">✓</span>Branded PNG card download</li>
+          <li><span class="ck">✓</span>Goal-Gradient progress bar + gate at 3</li>
+        </ul>
+      </div>
+      <div class="col mid">
+        <div class="upbtn">UPGRADE</div>
+        <div class="arrow">↓</div>
+        <div class="acct">
+          <div class="t">Create Account</div>
+          <div class="fl">Username</div><div class="inp"></div>
+          <div class="fl">4-digit passcode</div><div class="inp"></div>
+          <div class="su">Sign Up →</div>
+        </div>
+      </div>
+      <div class="col prem">
+        <div><span class="pill prem">PREMIUM</span></div>
+        <div class="colhead">Everything in Free, plus:</div>
+        <ul>
+          <li><span class="ck">✓</span>Unlimited QR code generations</li>
+          <li><span class="ck">✓</span>Custom QR color picker</li>
+          <li><span class="ck">✓</span>Logo upload — centered, with remove</li>
+          <li><span class="ck">✓</span>Pre-filled message — chat opens ready</li>
+          <li><span class="ck">✓</span>Saved codes — reload your last 5</li>
+          <li><span class="ck">✓</span>SVG download — print-ready vector</li>
+        </ul>
+      </div>
+    </div>
+    <div class="tech">Built with HTML · CSS · Vanilla JS · qrcode-generator · localStorage · No backend · User data never leaves the browser</div>
+  </div>
+</section>
+
+<div class="hint">← → or Space to navigate · F11 full screen · Ctrl+P to save as PDF</div>
+<div class="nav">
+  <button id="prev" aria-label="Previous">‹</button>
+  <span class="counter" id="counter">1 / 3</span>
+  <button id="next" aria-label="Next">›</button>
+</div>
+
+<script>
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var idx = 0;
+
+  function fit(){
+    var s = Math.min(window.innerWidth / 1280, window.innerHeight / 720);
+    document.documentElement.style.setProperty('--s', s);
+  }
+  function show(n){
+    idx = (n + slides.length) % slides.length;
+    for (var i = 0; i < slides.length; i++) slides[i].classList.toggle('active', i === idx);
+    document.getElementById('counter').textContent = (idx + 1) + ' / ' + slides.length;
+  }
+  document.getElementById('next').onclick = function(){ show(idx + 1); };
+  document.getElementById('prev').onclick = function(){ show(idx - 1); };
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown'){ show(idx + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ show(idx - 1); }
+    else if (e.key === 'Home'){ show(0); }
+    else if (e.key === 'End'){ show(slides.length - 1); }
+  });
+  window.addEventListener('resize', fit);
+  fit();
+  show(0);
+</script>
+</body>
+</html>
