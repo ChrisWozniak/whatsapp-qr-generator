@@ -1446,6 +1446,24 @@ body.premium #login-link{display:none;}
     if (atGate() && formArea.style.display !== 'none') showUpgrade();
   });
 
+  // Clean entry point for sharing/demos: opening the app with ?fresh (or ?reset)
+  // — e.g. from the share-qr page — clears the freemium counter and any logged-in
+  // session so every visitor lands on a pristine free tier (0 of 3 used). The flag
+  // is then stripped from the URL so a tester's later refresh keeps their progress.
+  (function applyFreshParam() {
+    try {
+      const params = new URLSearchParams(location.search);
+      if (params.has('fresh') || params.has('reset')) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SESSION_KEY);
+        params.delete('fresh');
+        params.delete('reset');
+        const qs = params.toString();
+        history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+      }
+    } catch (e) {}
+  })();
+
   // Restore a logged-in Premium session so it persists across reloads.
   const sess = getSession();
   if (sess && getAccounts()[sess]) isPremium = true;

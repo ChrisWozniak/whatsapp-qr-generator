@@ -57,10 +57,12 @@
   // The deployed app lives at the repository root; this page sits beside it.
   // When served over http(s) we derive the root automatically (correct host/case);
   // opened locally we fall back to the known GitHub Pages URL so the code still works.
-  var FALLBACK_URL = 'https://chriswozniak.github.io/whatsapp-qr-generator/';
+  // ?fresh resets the app to a clean free tier (0 of 3 used) on each scan, so
+  // demo visitors never inherit prior testing state from a shared device.
+  var FALLBACK_URL = 'https://chriswozniak.github.io/whatsapp-qr-generator/?fresh=1';
   var appUrl = FALLBACK_URL;
   if (location.protocol === 'http:' || location.protocol === 'https:') {
-    appUrl = location.href.replace(/share-qr\.html(\?.*)?(#.*)?$/, '');
+    appUrl = location.href.replace(/share-qr\.html(\?.*)?(#.*)?$/, '') + '?fresh=1';
   }
 
   // Render the QR onto a canvas (black on white = most reliable for scanning).
