@@ -1102,18 +1102,29 @@ body.premium #login-link{display:none;}
     URL.revokeObjectURL(url);
   };
 
-  // Full demo reset — clears the counter AND all saved accounts/session and
-  // drops back to a pristine free state, so a presentation can start clean.
+  // Full demo reset — clears the counter, all saved accounts/session, AND every
+  // on-screen field so a presentation starts from a completely blank state.
   function resetCounter() {
     try {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(ACCOUNTS_KEY);
       localStorage.removeItem(SESSION_KEY);
     } catch(err) {}
+    // Premium + customization back to defaults
     isPremium    = false;
     currentColor = '#111b21';
     currentLogo  = null;
+    lastQrText   = '';
+    if (logoInput) logoInput.value = '';
+    if (qrColor)   qrColor.value   = '#111b21';
+    document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === '#111b21'));
     applyPremiumUI();
+    // Blank the inputs, live preview, and topbar
+    nameEl.value  = '';
+    phoneEl.value = '';
+    clearFieldError();
+    topbarName.textContent = 'Your name';
+    previewWrap.classList.remove('show');
     renderCounter();
     showForm();
     const sub = document.getElementById('topbar-sub');

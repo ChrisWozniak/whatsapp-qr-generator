@@ -72,6 +72,81 @@ The mocked upgrade was replaced with a real, in-app premium tier. Everything ren
 
 ---
 
+## PNG vs SVG — which download should I use?
+
+Premium offers two download formats because they do **fundamentally different jobs** — they are not duplicates. PNG and SVG are different *kinds* of image, and which one you want depends on whether your QR code is going on a **screen** or on **print**.
+
+### The core difference: pixels vs. math
+
+| | **PNG** (raster) | **SVG** (vector) |
+|---|---|---|
+| Made of | A fixed grid of pixels | Math/shapes (rectangles + paths) |
+| Scaling up | Gets **blurry / pixelated** | **Stays razor-sharp at any size** |
+| Best for | Screens, messaging, social media | Print, large format, design tools |
+| File size | Larger, fixed resolution | Tiny, resolution-independent |
+| Editable in design tools | No (flattened image) | Yes (Illustrator, Figma, Inkscape) |
+
+### Why one format isn't enough
+
+- **PNG alone fails at print.** The PNG is a 400 px branded card — perfect on a phone or in a WhatsApp message, but if a print shop enlarges it for a **poster, banner, or storefront window**, it turns blurry and jagged. You can't put a pixelated QR code on a large sign.
+- **SVG alone fails at sharing.** SVG prints perfectly at *any* size — business card or billboard, same crisp result — but it's awkward for everyday digital use: many platforms (Instagram, some chat apps, older tools) won't render or accept it, you can't easily paste it into a chat, and the branded contact-card layout is a raster composition.
+
+### So they're complementary
+
+- **PNG** → the quick, universal, *share-it-now* format (digital, messaging, the branded card).
+- **SVG** → the professional, *print-ready, scale-to-anything* format (business cards, flyers, signage) that a designer or print shop actually wants.
+
+This is exactly the premium value: free users get a perfectly good PNG for casual sharing, while paying users — small businesses and creators putting QR codes on **printed materials** — get print-quality vector output that never loses sharpness. (A future **PDF** export would add a third, page-formatted print-ready document, but PNG + SVG already cover the essential *screen vs. print* split.)
+
+---
+
+## Ideas for future updates (no backend required)
+
+A backlog of enhancements that fit the current architecture — single `index.html`, vanilla JS, `qrcode-generator`, Canvas/SVG, `localStorage`, CDN-only. **None of these need a server, database, or paid API.**
+
+### QR customization
+- **Background color picker** — second color input for the QR background (pairs with the existing foreground picker).
+- **QR body / eye styles** — rounded modules or styled finder "eyes" instead of plain squares.
+- **Gradient foreground** — linear/radial gradient fill for the modules.
+- **Logo size + opacity slider** — tune the center logo within scannable bounds.
+- **Preset brand themes** — one-click kits (e.g. WhatsApp, Mono, Sunset) that set color + style together.
+
+### Export & output
+- **PDF export** — page-formatted print-ready document (jsPDF via CDN).
+- **Copy QR to clipboard** — `navigator.clipboard.write()` with a PNG blob, no download.
+- **Print button** — `window.print()` with a print-only stylesheet (flyers / business cards).
+- **PNG size options** — 400 / 800 / 1600 px for higher print quality.
+- **vCard QR mode** — encode a full contact card (name + phone + org) instead of only a `wa.me` link.
+
+### Sharing (device-local, no backend)
+- **Web Share API** — `navigator.share()` opens the OS share sheet (WhatsApp, AirDrop, email).
+- **"Test scan" helper** — opens the encoded `wa.me` link in a new tab to confirm it resolves before sharing.
+
+### Freemium / account / demo
+- **Saved Codes history** — premium users' generated codes saved per account in `localStorage` and re-loadable without re-typing.
+- **Account switcher** — quickly switch/log in between the (up to 3) local demo accounts.
+- **Account metadata** — show "created / last login" dates on the premium screen for realism.
+- **Configurable free limit** — adjustable `MAX_FREE` (or a demo toggle) to reach the gate faster in presentations.
+- **Free-tier daily reset** — optionally reset the counter every 24h via a stored timestamp.
+
+### UX / usability
+- **Country-code dropdown** — select a dialing code that prefixes the number (complements the smart `buildWaMe`).
+- **Preview placeholder** — a friendly "Start typing to preview" state before a valid input.
+- **Toast notifications** — "Saved!", "Copied", "Logged in" instead of `alert()`.
+- **Page light/dark toggle** — theme the background outside the phone frame.
+
+### Accessibility / internationalization
+- **ARIA labels + focus management** across the screen transitions.
+- **Multi-language UI** — a strings object + language picker (all copy is static).
+
+### Polish & local analytics
+- **Session stats** — count of codes generated, stored in `localStorage` ("You've made 7 codes").
+- **Animated scan effect** — a CSS sweep line over the QR to mimic WhatsApp's live scanner.
+
+> **Highest demo impact for least effort:** Web Share + Copy-to-clipboard, the "Test scan" button, Saved Codes history, and QR body/eye styles.
+
+---
+
 ## Technology stack
 
 | Layer | Technology |
