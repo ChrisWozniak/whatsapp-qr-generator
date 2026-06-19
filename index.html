@@ -99,6 +99,12 @@ body.premium #progress-wrap{display:none;}
 .pc-upload-btn:hover{background:#374248;}
 .dl-svg{background:#2a3942;color:#e9edef;}
 .dl-svg:hover{background:#374248;}
+.pc-row-stack{flex-direction:column;align-items:stretch;gap:6px;}
+.pc-hint{color:#667781;font-size:11px;font-weight:400;}
+.pc-msg{width:100%;box-sizing:border-box;background:#2a3942;color:#e9edef;border:none;border-radius:8px;
+  padding:8px 10px;font-size:13px;font-family:inherit;line-height:1.4;resize:none;}
+.pc-msg::placeholder{color:#8696a0;}
+.pc-msg:focus{outline:1px solid #3a4a54;}
 
 /* ─── Free live preview on the form ──────────────────────────── */
 .preview-wrap{display:none;flex-direction:column;align-items:center;gap:6px;margin-top:4px;}
@@ -114,10 +120,10 @@ body.premium #progress-wrap{display:none;}
 /* ─── Output ─────────────────────────────────────────────────── */
 .output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
 .output-card{background:#1f2c34;border-radius:16px;width:100%;padding:14px 14px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
-.out-avatar{width:60px;height:60px;border-radius:50%;background:#c23b5a;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
-.out-avatar svg{width:34px;height:34px;}
-.out-name{color:#e9edef;font-size:18px;font-weight:500;text-align:center;}
-.out-sub{color:#8696a0;font-size:13px;margin-bottom:8px;}
+.out-avatar{width:46px;height:46px;border-radius:50%;background:#c23b5a;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+.out-avatar svg{width:26px;height:26px;}
+.out-name{color:#e9edef;font-size:16px;font-weight:500;text-align:center;}
+.out-sub{color:#8696a0;font-size:12px;margin-bottom:2px;}
 .qr-box{background:#fff;border-radius:12px;padding:14px;display:flex;align-items:center;justify-content:center;width:min(200px,55vw);height:min(200px,55vw);}
 #qr-canvas{width:calc(min(200px,55vw) - 28px);height:calc(min(200px,55vw) - 28px);display:block;}
 .privacy{color:#8696a0;font-size:12px;text-align:center;line-height:1.5;margin-top:10px;padding:0 4px;}
@@ -257,12 +263,12 @@ body.premium #login-link{display:none;}
   /* App fills screen width inside frame */
   .app{max-width:none;border-radius:0;min-height:0;}
 
-  .output-card{padding:20px 20px 24px;}
-  .out-sub{margin-bottom:12px;}
-  .privacy{margin-top:14px;}
-  .dl-btn{margin-top:14px;}
-  .qr-box{width:200px;height:200px;}
-  #qr-canvas{width:172px;height:172px;}
+  .output-card{padding:12px 18px 14px;}
+  .out-sub{margin-bottom:4px;}
+  .privacy{margin-top:8px;}
+  .dl-btn{margin-top:10px;}
+  .qr-box{width:178px;height:178px;}
+  #qr-canvas{width:154px;height:154px;}
 }
 
 /* Shown only when JavaScript is disabled */
@@ -424,6 +430,10 @@ body.premium #login-link{display:none;}
             <label class="pc-upload-btn" for="logo-input">Upload PNG/JPG</label>
             <input type="file" id="logo-input" accept="image/png,image/jpeg" hidden/>
           </div>
+          <div class="pc-row pc-row-stack">
+            <span class="pc-label">Pre-filled message <span class="pc-hint">— opens WhatsApp with this text ready to send</span></span>
+            <textarea id="qr-message" class="pc-msg" rows="2" maxlength="300" placeholder="e.g. Hi! I'd like to know more about your services."></textarea>
+          </div>
         </div>
 
         <button class="dl-btn" id="dl-btn">&#8595; Save PNG</button>
@@ -444,6 +454,7 @@ body.premium #login-link{display:none;}
             <li>Unlimited QR code generations</li>
             <li>Custom QR colors</li>
             <li>Upload your own center logo</li>
+            <li>Pre-filled message — chats open ready to send</li>
             <li>Download as SVG — vector, print-ready</li>
           </ul>
           <button class="upgrade-btn" id="upgrade-btn">Upgrade to Premium</button>
@@ -504,11 +515,13 @@ body.premium #login-link{display:none;}
   let isPremium    = false;
   let currentColor = '#111b21';
   let currentLogo  = null;   // uploaded logo Image, or null for the default WhatsApp icon
+  let currentMessage = '';   // premium: optional pre-filled WhatsApp message (?text=)
   let lastQrText   = '';     // text of the QR currently shown, for live re-render
 
   const qrColor       = document.getElementById('qr-color');
   const logoInput     = document.getElementById('logo-input');
   const dlSvgBtn      = document.getElementById('dl-svg-btn');
+  const messageEl     = document.getElementById('qr-message');
   const previewWrap   = document.getElementById('preview-wrap');
   const previewCanvas = document.getElementById('preview-canvas');
   const previewLocked = document.getElementById('preview-locked');
@@ -689,15 +702,23 @@ body.premium #login-link{display:none;}
   function showFieldError(msg) { fieldError.textContent = msg; }
   function clearFieldError()   { fieldError.textContent = ''; }
 
-  function buildWaMe(raw) {
+  function buildWaMe(raw, message) {
     const trimmed = raw.trim();
     const digits  = trimmed.replace(/\D/g, '');
-    if (!digits) return 'https://wa.me/';
-    // Only assume US (+1) for bare 10-digit numbers with no explicit country code.
-    // A leading '+' or '00' means the user already supplied one.
-    const hasCountryCode = trimmed.startsWith('+') || digits.startsWith('00');
-    const normalized = (!hasCountryCode && digits.length === 10) ? '1' + digits : digits;
-    return 'https://wa.me/' + normalized;
+    let base;
+    if (!digits) {
+      base = 'https://wa.me/';
+    } else {
+      // Only assume US (+1) for bare 10-digit numbers with no explicit country code.
+      // A leading '+' or '00' means the user already supplied one.
+      const hasCountryCode = trimmed.startsWith('+') || digits.startsWith('00');
+      const normalized = (!hasCountryCode && digits.length === 10) ? '1' + digits : digits;
+      base = 'https://wa.me/' + normalized;
+    }
+    // Premium: append a pre-filled message so the scanned QR opens WhatsApp
+    // with this text ready to send. URL-encoded so emoji/newlines stay valid.
+    const msg = (message || '').trim();
+    return msg ? base + '?text=' + encodeURIComponent(msg) : base;
   }
 
   function drawLogoOverlay(ctx, size) {
@@ -974,7 +995,7 @@ body.premium #login-link{display:none;}
       return;
     }
 
-    const waUrl = buildWaMe(phoneEl.value);
+    const waUrl = buildWaMe(phoneEl.value, currentMessage);
     try {
       generateQR(waUrl, canvas, { color: currentColor, logo: currentLogo });
     } catch (err) {
@@ -1022,7 +1043,7 @@ body.premium #login-link{display:none;}
       return;
     }
     try {
-      generateQR(buildWaMe(phoneEl.value), previewCanvas, { color: currentColor, logo: currentLogo });
+      generateQR(buildWaMe(phoneEl.value, currentMessage), previewCanvas, { color: currentColor, logo: currentLogo });
       previewCanvas.style.display = 'block';
       previewLabel.style.display  = 'block';
       previewLocked.style.display = 'none';
@@ -1089,6 +1110,18 @@ body.premium #login-link{display:none;}
     reader.readAsDataURL(file);
   });
 
+  // --- Premium: pre-filled message ---
+  // Rebuild the live QR (in the output card) whenever the message changes so
+  // the user sees the effect immediately; exports read lastQrText so they
+  // inherit the message automatically.
+  if (messageEl) messageEl.addEventListener('input', () => {
+    currentMessage = messageEl.value;
+    if (lastQrText) {
+      lastQrText = buildWaMe(phoneEl.value, currentMessage);
+      reRenderQR();
+    }
+  });
+
   // --- Premium: SVG (vector) download ---
   if (dlSvgBtn) dlSvgBtn.onclick = () => {
     if (!lastQrText) return;
@@ -1114,8 +1147,10 @@ body.premium #login-link{display:none;}
     isPremium    = false;
     currentColor = '#111b21';
     currentLogo  = null;
+    currentMessage = '';
     lastQrText   = '';
     if (logoInput) logoInput.value = '';
+    if (messageEl) messageEl.value = '';
     if (qrColor)   qrColor.value   = '#111b21';
     document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === '#111b21'));
     applyPremiumUI();

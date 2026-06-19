@@ -59,6 +59,7 @@ The mocked upgrade was replaced with a real, in-app premium tier. Everything ren
 - **Unlimited generations** — premium users bypass the 3-code gate; the progress bar is hidden.
 - **Custom QR color** — premium users recolor the QR in real time via swatches (WhatsApp dark/green) or a custom color picker.
 - **Center logo upload** — premium users upload a PNG/JPG logo; it's centered on a white backing and **contain-fit so the whole logo shows (no cropping)**, sized to stay scannable under the QR's level-H error correction.
+- **Pre-filled message** — premium users add an optional message that is URL-encoded into the QR as `wa.me/<number>?text=…`, so a scanned code opens WhatsApp with that text **already typed and ready to send** (great for businesses/creators). It updates the QR live and is inherited by both the PNG and SVG exports.
 - **SVG (vector) export** — premium users download a print-ready vector SVG (with their custom color + logo) in addition to the branded PNG card.
 - **Full demo reset** — **Ctrl+\\** (or 5 taps on the subtitle) now clears the counter **and** all saved accounts/session, returning to a pristine free state for a clean presentation.
 
