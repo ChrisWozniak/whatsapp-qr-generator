@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Scan to open the WhatsApp QR Generator</title>
+<!-- Same QR library the app uses — no extra dependencies. -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 22px; padding: 32px 20px;
+    background: #0b141a; color: #e9edef;
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    text-align: center;
+  }
+  .eyebrow { color: #25D366; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; }
+  h1 { margin: 0; font-size: 26px; font-weight: 600; }
+  p.sub { margin: 0; color: #8696a0; font-size: 15px; max-width: 460px; line-height: 1.5; }
+  .qr-card {
+    background: #fff; border-radius: 20px; padding: 22px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #qr-canvas { width: min(300px, 70vw); height: min(300px, 70vw); display: block; image-rendering: pixelated; }
+  .url {
+    display: inline-block; max-width: 90vw; word-break: break-all;
+    color: #e9edef; background: #1f2c34; border-radius: 10px;
+    padding: 10px 14px; font-size: 14px; text-decoration: none;
+  }
+  .url:hover { background: #2a3942; }
+  .dl {
+    background: #25D366; color: #06281b; border: none; border-radius: 12px;
+    padding: 12px 22px; font-size: 15px; font-weight: 600; cursor: pointer;
+    text-decoration: none; display: inline-block;
+  }
+  .dl:hover { background: #20bd5a; }
+  .hint { color: #667781; font-size: 12px; max-width: 440px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <span class="eyebrow">Scan to try it</span>
+  <h1>WhatsApp Contact QR Generator</h1>
+  <p class="sub">Point your phone camera at the code below to open the live app — or click the link on a computer.</p>
+
+  <div class="qr-card"><canvas id="qr-canvas" width="300" height="300"></canvas></div>
+
+  <a class="url" id="app-url" href="#">loading…</a>
+  <a class="dl" id="dl" href="#" download="whatsapp-qr-app.png">&#8595; Download PNG</a>
+
+  <p class="hint" id="hint"></p>
+
+<script>
+  // The deployed app lives at the repository root; this page sits beside it.
+  // When served over http(s) we derive the root automatically (correct host/case);
+  // opened locally we fall back to the known GitHub Pages URL so the code still works.
+  var FALLBACK_URL = 'https://chriswozniak.github.io/whatsapp-qr-generator/';
+  var appUrl = FALLBACK_URL;
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    appUrl = location.href.replace(/share-qr\.html(\?.*)?(#.*)?$/, '');
+  }
+
+  // Render the QR onto a canvas (black on white = most reliable for scanning).
+  var qr = qrcode(0, 'M');
+  qr.addData(appUrl);
+  qr.make();
+
+  var canvas = document.getElementById('qr-canvas');
+  var ctx = canvas.getContext('2d');
+  var count = qr.getModuleCount();
+  var margin = 4;                       // quiet zone, in modules
+  var cell = 12;                        // px per module (high-res for printing)
+  var size = (count + margin * 2) * cell;
+  canvas.width = canvas.height = size;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#111b21';
+  for (var r = 0; r < count; r++) {
+    for (var c = 0; c < count; c++) {
+      if (qr.isDark(r, c)) ctx.fillRect((c + margin) * cell, (r + margin) * cell, cell, cell);
+    }
+  }
+
+  var urlEl = document.getElementById('app-url');
+  urlEl.textContent = appUrl;
+  urlEl.href = appUrl;
+
+  var dl = document.getElementById('dl');
+  dl.href = canvas.toDataURL('image/png');
+
+  document.getElementById('hint').textContent =
+    'Tip: project this full-screen so the whole room can scan it at once. The PNG is high-resolution and prints cleanly on a flyer or slide.';
+</script>
+</body>
+</html>
