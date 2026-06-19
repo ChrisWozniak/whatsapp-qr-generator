@@ -97,6 +97,10 @@ body.premium #progress-wrap{display:none;}
 #qr-color{width:34px;height:28px;border:none;background:none;cursor:pointer;padding:0;}
 .pc-upload-btn{background:#2a3942;color:#e9edef;font-size:13px;padding:7px 12px;border-radius:8px;cursor:pointer;transition:background .15s;}
 .pc-upload-btn:hover{background:#374248;}
+.pc-logo-actions{display:flex;align-items:center;gap:8px;}
+.pc-remove-btn{background:none;border:none;color:#8696a0;font-size:12px;cursor:pointer;padding:0;}
+.pc-remove-btn:hover{color:#ff6b6b;}
+.pc-remove-btn[hidden]{display:none;}
 .dl-svg{background:#2a3942;color:#e9edef;}
 .dl-svg:hover{background:#374248;}
 .pc-row-stack{flex-direction:column;align-items:stretch;gap:6px;}
@@ -116,6 +120,26 @@ body.premium #progress-wrap{display:none;}
   width:140px;height:140px;background:#1f2c34;border:1px dashed #3a4a54;border-radius:10px;padding:12px;text-align:center;}
 .preview-locked .lock-ico{font-size:22px;}
 .preview-locked .lock-text{color:#8696a0;font-size:11px;line-height:1.4;}
+
+/* ─── Premium: saved-codes history ───────────────────────────── */
+.saved-wrap{flex-direction:column;width:100%;gap:6px;margin-top:8px;}
+.saved-head{display:flex;align-items:center;justify-content:space-between;color:#8696a0;font-size:12px;}
+.saved-hint{color:#667781;font-weight:400;}
+.saved-clear{background:none;border:none;color:#8696a0;font-size:11px;cursor:pointer;padding:0;}
+.saved-clear:hover{color:#e9edef;}
+.saved-list{list-style:none;margin:0;padding:0 4px 0 0;width:100%;display:flex;flex-direction:column;gap:6px;
+  max-height:266px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a4a54 transparent;}
+.saved-list::-webkit-scrollbar{width:5px;}
+.saved-list::-webkit-scrollbar-track{background:transparent;}
+.saved-list::-webkit-scrollbar-thumb{background:#3a4a54;border-radius:3px;}
+.saved-list::-webkit-scrollbar-thumb:hover{background:#4a5a64;}
+.saved-item{display:flex;align-items:center;gap:8px;background:#1f2c34;border-radius:10px;padding:8px 10px;}
+.si-main{flex:1;min-width:0;cursor:pointer;}
+.si-name{color:#e9edef;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.si-sub{color:#8696a0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.saved-del{background:none;border:none;color:#8696a0;font-size:14px;line-height:1;cursor:pointer;padding:2px 4px;border-radius:6px;}
+.saved-del:hover{color:#ff6b6b;background:#2a3942;}
+.saved-empty{color:#667781;font-size:12px;text-align:center;padding:6px 2px;}
 
 /* ─── Output ─────────────────────────────────────────────────── */
 .output{display:none;padding:0 16px 20px;flex-direction:column;align-items:center;gap:0;flex:1;justify-content:center;}
@@ -397,6 +421,15 @@ body.premium #login-link{display:none;}
           <button class="link-btn" id="login-link">Already Premium? Log in</button>
           <button class="link-btn premium-only" id="logout-link">Log out of Premium</button>
         </div>
+        <!-- Premium: per-account history of recently generated codes (localStorage,
+             max 5, no server). Tap a row to reload it; trash icon deletes one. -->
+        <div class="saved-wrap premium-only" id="saved-wrap">
+          <div class="saved-head">
+            <span>My saved codes <span class="saved-hint">— last 5 kept</span></span>
+            <button class="saved-clear" id="saved-clear" type="button">Clear all</button>
+          </div>
+          <ul class="saved-list" id="saved-list"></ul>
+        </div>
       </div>
 
       <div class="output" id="output-area">
@@ -427,8 +460,11 @@ body.premium #login-link{display:none;}
           </div>
           <div class="pc-row">
             <span class="pc-label">Center logo</span>
-            <label class="pc-upload-btn" for="logo-input">Upload PNG/JPG</label>
-            <input type="file" id="logo-input" accept="image/png,image/jpeg" hidden/>
+            <span class="pc-logo-actions">
+              <button type="button" class="pc-remove-btn" id="logo-remove" hidden>Remove</button>
+              <label class="pc-upload-btn" for="logo-input">Upload PNG/JPG</label>
+              <input type="file" id="logo-input" accept="image/png,image/jpeg" hidden/>
+            </span>
           </div>
           <div class="pc-row pc-row-stack">
             <span class="pc-label">Pre-filled message <span class="pc-hint">— opens WhatsApp with this text ready to send</span></span>
@@ -455,6 +491,7 @@ body.premium #login-link{display:none;}
             <li>Custom QR colors</li>
             <li>Upload your own center logo</li>
             <li>Pre-filled message — chats open ready to send</li>
+            <li>Saved codes — reload your last 5 anytime</li>
             <li>Download as SVG — vector, print-ready</li>
           </ul>
           <button class="upgrade-btn" id="upgrade-btn">Upgrade to Premium</button>
@@ -508,20 +545,29 @@ body.premium #login-link{display:none;}
   const STORAGE_KEY  = 'waqr_uses';
   const ACCOUNTS_KEY = 'waqr_accounts';   // { username: { code: "1234" } }, up to 3
   const SESSION_KEY  = 'waqr_session';     // username of the logged-in Premium user
+  const SAVED_KEY    = 'waqr_saved';       // { username: [ {name,phone,message,color,logo,ts}, ... ] }
   const MAX_FREE     = 3;
   const MAX_ACCOUNTS = 3;
+  const MAX_SAVED    = 5;   // keep only the 5 most recent codes per account
 
   // --- Premium state (persisted via a local account + session) ---
   let isPremium    = false;
   let currentColor = '#111b21';
   let currentLogo  = null;   // uploaded logo Image, or null for the default WhatsApp icon
+  let currentLogoData = null; // data-URL of the uploaded logo, so it can be saved/restored
   let currentMessage = '';   // premium: optional pre-filled WhatsApp message (?text=)
+  let activeCodeId = null;   // id of the saved entry currently on screen, so post-
+                             // generation tweaks (color/logo/message) update it
   let lastQrText   = '';     // text of the QR currently shown, for live re-render
 
   const qrColor       = document.getElementById('qr-color');
   const logoInput     = document.getElementById('logo-input');
+  const logoRemove    = document.getElementById('logo-remove');
   const dlSvgBtn      = document.getElementById('dl-svg-btn');
   const messageEl     = document.getElementById('qr-message');
+  const savedWrap     = document.getElementById('saved-wrap');
+  const savedList     = document.getElementById('saved-list');
+  const savedClear    = document.getElementById('saved-clear');
   const previewWrap   = document.getElementById('preview-wrap');
   const previewCanvas = document.getElementById('preview-canvas');
   const previewLocked = document.getElementById('preview-locked');
@@ -550,6 +596,154 @@ body.premium #login-link{display:none;}
   function getSession()  { try { return localStorage.getItem(SESSION_KEY) || ''; } catch(e) { return ''; } }
   function setSession(u) { try { localStorage.setItem(SESSION_KEY, u); } catch(e) {} }
   function clearSession(){ try { localStorage.removeItem(SESSION_KEY); } catch(e) {} }
+
+  // --- Saved-codes history (premium, per-account, localStorage only — no server) ---
+  function getSaved()    { try { return JSON.parse(localStorage.getItem(SAVED_KEY)) || {}; } catch(e) { return {}; } }
+  function saveSaved(o)  { try { localStorage.setItem(SAVED_KEY, JSON.stringify(o)); } catch(e) {} }
+  function getUserCodes(){ const u = getSession(); return (u && getSaved()[u]) || []; }
+
+  // Record the just-generated code at the top of the current user's history,
+  // de-duping an identical contact and capping the list at MAX_SAVED.
+  function addSavedCode() {
+    const user = getSession();
+    if (!isPremium || !user) return;   // history is a premium, per-account feature
+    const id = Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    const entry = {
+      id:      id,
+      name:    nameEl.value,
+      phone:   phoneEl.value,
+      message: currentMessage,
+      color:   currentColor,
+      logo:    currentLogoData || null,
+      ts:      Date.now()
+    };
+    const all  = getSaved();
+    let list   = all[user] || [];
+    // Drop any prior entry for the same contact so re-generating moves it to top.
+    list = list.filter(e => !(e.name === entry.name && e.phone === entry.phone && e.message === entry.message));
+    list.unshift(entry);
+    all[user] = list.slice(0, MAX_SAVED);
+    saveSaved(all);
+    activeCodeId = id;   // customizations made now (color/logo/message) update this entry
+    renderSavedList();
+  }
+
+  // Customization controls (color/logo/message) live on the output screen and are
+  // applied AFTER generation, so persist those tweaks back into the active entry.
+  function updateActiveCode() {
+    if (!isPremium || !activeCodeId) return;
+    const user = getSession();
+    if (!user) return;
+    const all  = getSaved();
+    const list = all[user] || [];
+    const e = list.find(x => x.id === activeCodeId);
+    if (!e) return;
+    e.message = currentMessage;
+    e.color   = currentColor;
+    e.logo    = currentLogoData || null;
+    saveSaved(all);
+    renderSavedList();
+  }
+
+  function deleteSavedCode(i) {
+    const user = getSession();
+    if (!user) return;
+    const all = getSaved();
+    const list = all[user] || [];
+    list.splice(i, 1);
+    all[user] = list;
+    saveSaved(all);
+    renderSavedList();
+  }
+
+  function clearSavedCodes() {
+    const user = getSession();
+    if (!user) return;
+    const all = getSaved();
+    delete all[user];
+    saveSaved(all);
+    renderSavedList();
+  }
+
+  // Re-populate every field from a saved entry and jump straight to its QR.
+  function loadSavedCode(i) {
+    const entry = getUserCodes()[i];
+    if (!entry) return;
+    activeCodeId   = entry.id || null;   // further tweaks update this same entry
+    nameEl.value   = entry.name || '';
+    phoneEl.value  = entry.phone || '';
+    currentMessage = entry.message || '';
+    if (messageEl) messageEl.value = currentMessage;
+    selectColor(entry.color || '#111b21');   // sets currentColor + swatch
+
+    const finish = () => {
+      const nm = sanitizeName(nameEl.value) || 'Contact';
+      outName.textContent    = nm;
+      topbarName.textContent = nm;
+      updateLogoControls();
+      lastQrText = buildWaMe(phoneEl.value, currentMessage);
+      reRenderQR();
+      showOutput();
+    };
+
+    if (entry.logo) {
+      currentLogoData = entry.logo;
+      const img = new Image();
+      img.onload  = () => { currentLogo = img; finish(); };
+      img.onerror = () => { currentLogo = null; currentLogoData = null; finish(); };
+      img.src = entry.logo;
+    } else {
+      currentLogo = null;
+      currentLogoData = null;
+      if (logoInput) logoInput.value = '';
+      finish();
+    }
+  }
+
+  // Render the current user's history list (text set via textContent — XSS-safe).
+  function renderSavedList() {
+    if (!savedList) return;
+    const list = (isPremium && getSession()) ? getUserCodes() : [];
+    savedList.innerHTML = '';
+    if (!list.length) {
+      const li = document.createElement('li');
+      li.className = 'saved-empty';
+      li.textContent = 'No saved codes yet — generate one to save it here.';
+      savedList.appendChild(li);
+      return;
+    }
+    list.forEach((e, i) => {
+      const li = document.createElement('li');
+      li.className = 'saved-item';
+
+      const main = document.createElement('div');
+      main.className = 'si-main';
+      main.title = 'Load this code';
+      main.onclick = () => loadSavedCode(i);
+
+      const nm = document.createElement('div');
+      nm.className = 'si-name';
+      nm.textContent = (e.name && e.name.trim()) || 'Contact';
+
+      const sub = document.createElement('div');
+      sub.className = 'si-sub';
+      sub.textContent = (e.phone || '') + (e.message ? ' · ' + e.message : '');
+
+      main.appendChild(nm);
+      main.appendChild(sub);
+
+      const del = document.createElement('button');
+      del.className = 'saved-del';
+      del.type = 'button';
+      del.title = 'Delete';
+      del.innerHTML = '&#128465;';
+      del.onclick = (ev) => { ev.stopPropagation(); deleteSavedCode(i); };
+
+      li.appendChild(main);
+      li.appendChild(del);
+      savedList.appendChild(li);
+    });
+  }
 
   // The freemium gate applies only to free users who've hit the limit.
   function atGate() { return !isPremium && isAtLimit(); }
@@ -614,7 +808,8 @@ body.premium #login-link{display:none;}
     outputArea.style.display  = 'none';
     upgradeArea.style.display = 'none';
     authArea.style.display    = 'none';
-    renderPreview();   // refresh preview/lock state for the current gate status
+    renderPreview();     // refresh preview/lock state for the current gate status
+    renderSavedList();   // keep the premium history in sync with the current account
   }
   function showOutput() {
     formArea.style.display    = 'none';
@@ -657,6 +852,7 @@ body.premium #login-link{display:none;}
     isPremium = true;
     setSession(username);
     applyPremiumUI();
+    renderSavedList();
     renderCounter();
     if (lastQrText) { reRenderQR(); showOutput(); }
     else            { showForm(); }
@@ -665,7 +861,9 @@ body.premium #login-link{display:none;}
   function logout() {
     isPremium = false;
     clearSession();
+    activeCodeId = null;
     applyPremiumUI();
+    renderSavedList();
     renderCounter();
     showForm();
   }
@@ -995,6 +1193,13 @@ body.premium #login-link{display:none;}
       return;
     }
 
+    // A brand-new contact starts from the default look so it doesn't inherit the
+    // previous code's logo/color/message. Re-generating the SAME contact keeps its
+    // customization (so editing a phone typo doesn't wipe the chosen branding).
+    const active = activeCodeId ? getUserCodes().find(e => e.id === activeCodeId) : null;
+    const sameContact = active && active.name === nameEl.value && active.phone === phoneEl.value;
+    if (!sameContact) resetCustomization();
+
     const waUrl = buildWaMe(phoneEl.value, currentMessage);
     try {
       generateQR(waUrl, canvas, { color: currentColor, logo: currentLogo });
@@ -1009,6 +1214,7 @@ body.premium #login-link{display:none;}
     outName.textContent    = name;
     topbarName.textContent = name;
     if (!isPremium) incrementUses();   // premium users generate unlimited codes
+    addSavedCode();                    // premium: record in per-account history
     renderCounter();
     showOutput();
   }
@@ -1016,10 +1222,13 @@ body.premium #login-link{display:none;}
   nameEl.addEventListener('input', () => {
     topbarName.textContent = sanitizeName(nameEl.value) || 'Contact';
     clearFieldError();
+    maybeResetForNewContact();
     updateGenBtn();
+    schedulePreview();
   });
   phoneEl.addEventListener('input', () => {
     clearFieldError();
+    maybeResetForNewContact();
     updateGenBtn();
     schedulePreview();
   });
@@ -1082,6 +1291,46 @@ body.premium #login-link{display:none;}
     a.click();
   };
 
+  // Show the "Remove" logo control only when a logo is actually set.
+  function updateLogoControls() {
+    if (logoRemove) logoRemove.hidden = !currentLogo;
+  }
+
+  // Return all customization to defaults — used when starting a brand-new code
+  // so a new contact doesn't inherit the previous code's logo/color/message.
+  function resetCustomization() {
+    currentColor    = '#111b21';
+    currentLogo     = null;
+    currentLogoData = null;
+    currentMessage  = '';
+    if (qrColor)   qrColor.value   = '#111b21';
+    if (logoInput) logoInput.value = '';
+    if (messageEl) messageEl.value = '';
+    document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === '#111b21'));
+    updateLogoControls();
+  }
+
+  function removeLogo() {
+    currentLogo = null;
+    currentLogoData = null;
+    if (logoInput) logoInput.value = '';
+    updateLogoControls();
+    reRenderQR();
+    updateActiveCode();
+  }
+
+  // Once the typed name/phone no longer matches the loaded code, the user is
+  // building a different contact — drop the carried-over branding so the live
+  // preview (and the next generation) start from the default look.
+  function maybeResetForNewContact() {
+    if (!activeCodeId) return;
+    const active = getUserCodes().find(e => e.id === activeCodeId);
+    if (active && (active.name !== nameEl.value || active.phone !== phoneEl.value)) {
+      resetCustomization();
+      activeCodeId = null;
+    }
+  }
+
   // --- Premium: custom color ---
   function selectColor(hex) {
     currentColor = hex;
@@ -1089,8 +1338,8 @@ body.premium #login-link{display:none;}
     document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === hex));
     reRenderQR();
   }
-  document.querySelectorAll('.swatch').forEach(s => { s.onclick = () => selectColor(s.dataset.color); });
-  if (qrColor) qrColor.addEventListener('input', () => selectColor(qrColor.value));
+  document.querySelectorAll('.swatch').forEach(s => { s.onclick = () => { selectColor(s.dataset.color); updateActiveCode(); }; });
+  if (qrColor) qrColor.addEventListener('input', () => { selectColor(qrColor.value); updateActiveCode(); });
 
   // --- Premium: logo upload ---
   if (logoInput) logoInput.addEventListener('change', () => {
@@ -1104,7 +1353,7 @@ body.premium #login-link{display:none;}
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => { currentLogo = img; reRenderQR(); };
+      img.onload = () => { currentLogo = img; currentLogoData = reader.result; updateLogoControls(); reRenderQR(); updateActiveCode(); };
       img.src = reader.result;
     };
     reader.readAsDataURL(file);
@@ -1119,8 +1368,15 @@ body.premium #login-link{display:none;}
     if (lastQrText) {
       lastQrText = buildWaMe(phoneEl.value, currentMessage);
       reRenderQR();
+      updateActiveCode();
     }
   });
+
+  // --- Premium: remove logo ---
+  if (logoRemove) logoRemove.onclick = removeLogo;
+
+  // --- Premium: saved-codes "Clear all" ---
+  if (savedClear) savedClear.onclick = clearSavedCodes;
 
   // --- Premium: SVG (vector) download ---
   if (dlSvgBtn) dlSvgBtn.onclick = () => {
@@ -1142,17 +1398,13 @@ body.premium #login-link{display:none;}
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(ACCOUNTS_KEY);
       localStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SAVED_KEY);
     } catch(err) {}
     // Premium + customization back to defaults
     isPremium    = false;
-    currentColor = '#111b21';
-    currentLogo  = null;
-    currentMessage = '';
+    activeCodeId = null;
     lastQrText   = '';
-    if (logoInput) logoInput.value = '';
-    if (messageEl) messageEl.value = '';
-    if (qrColor)   qrColor.value   = '#111b21';
-    document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('sel', s.dataset.color === '#111b21'));
+    resetCustomization();
     applyPremiumUI();
     // Blank the inputs, live preview, and topbar
     nameEl.value  = '';
@@ -1160,6 +1412,7 @@ body.premium #login-link{display:none;}
     clearFieldError();
     topbarName.textContent = 'Your name';
     previewWrap.classList.remove('show');
+    renderSavedList();
     renderCounter();
     showForm();
     const sub = document.getElementById('topbar-sub');
@@ -1197,6 +1450,7 @@ body.premium #login-link{display:none;}
   const sess = getSession();
   if (sess && getAccounts()[sess]) isPremium = true;
   applyPremiumUI();
+  renderSavedList();
 
   // Init — defer one frame so CSS transition fires on first load
   requestAnimationFrame(() => {

@@ -58,8 +58,9 @@ The mocked upgrade was replaced with a real, in-app premium tier. Everything ren
 - **Local Premium account (sign-up on upgrade)** — clicking **Upgrade to Premium** opens a "Create your Premium account" screen (**username + 4-digit passcode**). The account is saved to `localStorage` (up to 3 users) and unlocks premium. Returning users use **"Already Premium? Log in"** to restore access; premium also **persists across reloads** via a saved session. A **"Log out of Premium"** link returns to the free tier. *Demo only — passcodes are stored in plain `localStorage`, which is not secure; a real product needs a backend.*
 - **Unlimited generations** — premium users bypass the 3-code gate; the progress bar is hidden.
 - **Custom QR color** — premium users recolor the QR in real time via swatches (WhatsApp dark/green) or a custom color picker.
-- **Center logo upload** — premium users upload a PNG/JPG logo; it's centered on a white backing and **contain-fit so the whole logo shows (no cropping)**, sized to stay scannable under the QR's level-H error correction.
+- **Center logo upload (+ remove)** — premium users upload a PNG/JPG logo; it's centered on a white backing and **contain-fit so the whole logo shows (no cropping)**, sized to stay scannable under the QR's level-H error correction. A **Remove** control clears it back to the default WhatsApp handle icon, and starting a **new contact** resets the logo/color/message to defaults so branding never carries over unintentionally.
 - **Pre-filled message** — premium users add an optional message that is URL-encoded into the QR as `wa.me/<number>?text=…`, so a scanned code opens WhatsApp with that text **already typed and ready to send** (great for businesses/creators). It updates the QR live and is inherited by both the PNG and SVG exports.
+- **Saved codes history** — every generated code is saved **per Premium account** in `localStorage` (keyed off the logged-in user), keeping the **5 most recent**. Each entry stores the name, phone, pre-filled message, color, and the uploaded logo; tapping a row **reloads** it into the editor (no retyping), and customization tweaks made afterward update that entry in place. Rows have a delete action plus **Clear all**. *Demo only — local to the browser/device, no server sync.*
 - **SVG (vector) export** — premium users download a print-ready vector SVG (with their custom color + logo) in addition to the branded PNG card.
 - **Full demo reset** — **Ctrl+\\** (or 5 taps on the subtitle) now clears the counter **and** all saved accounts/session, returning to a pristine free state for a clean presentation.
 
@@ -68,7 +69,7 @@ The mocked upgrade was replaced with a real, in-app premium tier. Everything ren
 - **Real payment processing** — upgrade is still simulated locally (no Stripe); accounts are a client-side mock
 - **PDF export** — additional print format beyond PNG/SVG
 - **Download-format hints & dedicated hex field** — P1/P2 polish for the export and color controls
-- **Remove-logo control & logo-size scan warning** — P1/P2 polish for the logo feature
+- **Logo-size scan warning** — warn when an uploaded logo grows large enough to risk scannability
 - **Server-side accounts** — real authentication/persistence to replace the local `localStorage` mock
 
 ---
@@ -124,7 +125,6 @@ A backlog of enhancements that fit the current architecture — single `index.ht
 - **"Test scan" helper** — opens the encoded `wa.me` link in a new tab to confirm it resolves before sharing.
 
 ### Freemium / account / demo
-- **Saved Codes history** — premium users' generated codes saved per account in `localStorage` and re-loadable without re-typing.
 - **Account switcher** — quickly switch/log in between the (up to 3) local demo accounts.
 - **Account metadata** — show "created / last login" dates on the premium screen for realism.
 - **Configurable free limit** — adjustable `MAX_FREE` (or a demo toggle) to reach the gate faster in presentations.
