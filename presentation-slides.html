@@ -78,6 +78,23 @@
   .s3 .acct .su{margin-top:14px;background:var(--amber);color:#3a2600;font-weight:700;font-size:14px;padding:8px;border-radius:7px;}
   .s3 .tech{color:var(--muted);font-size:15px;text-align:center;margin-top:20px;}
 
+  /* ---------- SLIDE 4 — THE DIFFERENCE ---------- */
+  .s4{background:var(--bg);color:var(--text);padding:52px 60px;display:flex;flex-direction:column;}
+  .s4 h1{font-family:var(--serif);font-weight:700;font-size:44px;margin:10px 0 20px;}
+  .s4 .cmp{display:flex;gap:26px;flex:1;}
+  .s4 .side{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 26px;display:flex;flex-direction:column;}
+  .s4 .side.ours{border-color:rgba(37,211,102,.45);background:#14241c;}
+  .s4 .side h3{font-size:21px;margin-bottom:16px;}
+  .s4 .side.builtin h3{color:#cda36a;}
+  .s4 .side.ours h3{color:var(--green);}
+  .s4 ul{list-style:none;display:flex;flex-direction:column;gap:13px;}
+  .s4 li{display:flex;align-items:flex-start;gap:11px;font-size:18px;line-height:1.3;}
+  .s4 .mk{flex:none;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;margin-top:1px;}
+  .s4 .builtin .mk{background:#3a2f24;color:#e0a96a;}
+  .s4 .ours .mk{background:var(--green);color:#06281b;}
+  .s4 .summary{margin-top:20px;background:#10241a;border:1px solid rgba(37,211,102,.35);border-radius:14px;padding:16px 26px;font-size:18.5px;line-height:1.5;color:#dff3e7;text-align:center;}
+  .s4 .summary b{color:var(--green);}
+
   /* ---------- Nav ---------- */
   .nav{position:fixed;right:22px;bottom:18px;display:flex;align-items:center;gap:14px;z-index:50;color:#cfd9dd;}
   .nav button{background:rgba(255,255,255,.08);color:#e9edef;border:1px solid rgba(255,255,255,.18);
@@ -187,6 +204,43 @@
       </div>
     </div>
     <div class="tech">Built with HTML · CSS · Vanilla JS · qrcode-generator · localStorage · No backend · User data never leaves the browser</div>
+  </div>
+</section>
+
+<!-- ============ SLIDE 4 ============ -->
+<section class="slide">
+  <div class="stage s4">
+    <div class="eyebrow">The Difference</div>
+    <h1>Why not just use WhatsApp's built-in QR?</h1>
+    <div class="cmp">
+      <div class="side builtin">
+        <h3>WhatsApp built-in QR</h3>
+        <ul>
+          <li><span class="mk">✕</span>In-app only — you must open WhatsApp to show it</li>
+          <li><span class="mk">✕</span>No clean image to download or print</li>
+          <li><span class="mk">✕</span>Needs WhatsApp's in-app scanner</li>
+          <li><span class="mk">✕</span>Only adds you as a contact</li>
+          <li><span class="mk">✕</span>Locked to your logged-in account</li>
+          <li><span class="mk">✕</span>Fixed, generic green code — no branding</li>
+        </ul>
+      </div>
+      <div class="side ours">
+        <h3>Our app</h3>
+        <ul>
+          <li><span class="mk">✓</span>Works in any browser — phone or desktop</li>
+          <li><span class="mk">✓</span>Download PNG / print-ready SVG</li>
+          <li><span class="mk">✓</span>Scans with any phone camera</li>
+          <li><span class="mk">✓</span>Opens a chat — message pre-filled</li>
+          <li><span class="mk">✓</span>Generate for any number (business lines, teammates)</li>
+          <li><span class="mk">✓</span>Custom color + center logo</li>
+        </ul>
+      </div>
+    </div>
+    <div class="summary">
+      WhatsApp's QR is a personal, in-app <b>"add me"</b> code. Ours turns a number into a
+      downloadable, brandable, universally scannable <b>"start a conversation"</b> asset
+      you can put anywhere in the real world.
+    </div>
   </div>
 </section>
 
