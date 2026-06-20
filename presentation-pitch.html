@@ -40,36 +40,34 @@
     body{background:#fff;}
     .page{box-shadow:none;margin:0;max-width:none;border-radius:0;padding:0;}
 
-    /* ---- Page 1 (Problem, Solution, Live Demo) — readable, fairly tight ---- */
+    /* Uniform, readable sizing across both pages. */
     .eyebrow{font-size:12px;}
-    h1{font-size:25px;margin:4px 0 5px;}
-    .byline,.duration{font-size:13px;}
+    h1{font-size:24px;margin:4px 0 5px;}
+    .byline,.duration{font-size:12.5px;}
     .duration{margin-top:3px;}
     .applink{display:none;}             /* redundant on paper; link is in the README */
-    hr{margin:13px 0;}
+    hr{margin:12px 0;}
     h2{font-size:15.5px;margin:14px 0 5px;padding-bottom:5px;}
-    h2 .secs{font-size:12.5px;}
-    .quote{font-size:12.5px;margin:7px 0;padding-left:11px;line-height:1.45;}
+    h2 .secs{font-size:12px;}
+    .quote{font-size:12.5px;margin:8px 0;padding-left:11px;line-height:1.45;}
     .note{font-size:11.5px;margin:4px 0 4px 4px;line-height:1.35;}
     .action{font-size:12.5px;margin:9px 0 5px;}
     ol.steps{margin:6px 0;padding-left:22px;}
     ol.steps li{margin:5px 0;font-size:12.5px;}
     ol.steps li .detail{font-size:11.5px;}
+    .backup h3{font-size:15px;margin:15px 0 6px;}
+    .backup ul{padding-left:21px;}
+    .backup li{font-size:12px;margin:6px 0;line-height:1.38;}
+    .remember{font-size:12px;margin-top:16px;padding-top:13px;}
 
-    /* Don't let a quote/step/note split across the page break */
+    /* Don't split a quote/step/note across the page break. */
     .quote, ol.steps li, .backup li, .note{break-inside:avoid;page-break-inside:avoid;}
 
-    /* ---- Clean split: page 2 starts at section 4 ---- */
+    /* Clean split: page 1 = Problem/Solution/Demo, page 2 = the rest. */
     h2.pg2{break-before:page;page-break-before:always;margin-top:0;}
-
-    /* ---- Page 2 (Free vs Premium, Close, Backup) — spread to fill the page ---- */
-    .pg2, .pg2 ~ h2{font-size:16.5px;margin:30px 0 11px;padding-bottom:6px;}
-    .pg2 ~ .quote{font-size:13.5px;margin:15px 0;line-height:1.6;}
-    .pg2 ~ .note{font-size:12px;margin:9px 0 9px 4px;line-height:1.4;}
-    .backup h3{font-size:16px;margin:30px 0 9px;}
-    .backup ul{padding-left:22px;}
-    .backup li{font-size:13px;margin:9px 0;line-height:1.4;}
-    .remember{font-size:12.5px;margin-top:28px;padding-top:16px;}
+    /* A touch more breathing room on the lighter second half. */
+    .pg2 ~ .quote{margin:10px 0;}
+    .pg2 ~ .note{margin:6px 0 6px 4px;}
   }
 </style>
 </head>
@@ -79,7 +77,7 @@
   <div class="eyebrow">Presentation Pitch</div>
   <h1>WhatsApp Contact QR Generator</h1>
   <div class="byline">Chris Wozniak &amp; Nathan Hutton · AI-Native L2 · Pursuit · June 2026</div>
-  <div class="duration">Target duration: 3.5 minutes</div>
+  <div class="duration">Target duration: ~4 minutes</div>
   <div class="applink">Live app: <a href="https://chriswozniak.github.io/whatsapp-qr-generator/?fresh=1">https://chriswozniak.github.io/whatsapp-qr-generator/?fresh=1</a></div>
 
   <hr/>
@@ -136,7 +134,14 @@
   <p class="quote">"Premium unlocks unlimited generations plus the full suite: custom colors, your logo, pre-filled messages, saved codes, and print-ready SVG. Create an account or log in if you're already a member."</p>
   <p class="quote">"The business model is simple: the free tier does the selling, and premium delivers the value."</p>
 
-  <h2>5. THE CLOSE <span class="secs">· 30 seconds</span></h2>
+  <h2>5. THE DIFFERENCE <span class="secs">· 25 seconds</span></h2>
+  <p class="note">→ Advance to Slide 4 — built-in WhatsApp QR vs. our app.</p>
+  <p class="quote">"You might be wondering — doesn't WhatsApp already have a QR code? It does. But it's personal and buried in the app: you have to open WhatsApp to show it, you can't download it, and it only adds you as a contact."</p>
+  <p class="quote">"Ours works in any browser, downloads as a print-ready image, scans with any phone camera, and opens a real conversation — with your message already typed."</p>
+  <p class="quote">"WhatsApp's QR says 'add me.' Ours says 'start a conversation' — and you can put it anywhere in the real world."</p>
+  <p class="note">→ Gesture to the two columns on the slide as you contrast them.</p>
+
+  <h2>6. THE CLOSE <span class="secs">· 30 seconds</span></h2>
   <p class="note">→ Close the slides. Face the room. Slow down.</p>
   <p class="quote">"Two billion people use WhatsApp every day. Small business owners, freelancers, creators — anyone who shares their contact in the real world needs this."</p>
   <p class="quote">"Zero simple standalone tools exist to do it."</p>
