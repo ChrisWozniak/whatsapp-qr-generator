@@ -2,7 +2,7 @@
 
 A browser-based tool that generates scannable WhatsApp QR codes from a name and phone number — no app, no sign-up, no backend required.
 
-Built and implemented by **Chris Wozniak**. **Nathan Hutton** collaborated on the project presentation.
+Built and implemented by Chris Wozniak. Nathan Hutton collaborated on the project presentation
 ---
 
 ## What it does
